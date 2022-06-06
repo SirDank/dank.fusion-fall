@@ -39,7 +39,7 @@ def main():
 
 def one():
     
-    exec("cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')); index = int(input(clr('  > TableData Object Index [7]: ')))")
+    exec("cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('\"',''); index = int(input(clr('  > TableData Object Index [7]: ')))")
     print(clr("\n  > f = open(cab_path, 'rb')"))
     exec("f = open(cab_path, 'rb')")
     print(clr("  > tabledata = Asset.from_file(f)"))
