@@ -5,6 +5,7 @@
 
 from dankware import align, clr_banner, clr, cls
 import sys
+import os
 
 '''if not os.path.exists("unitypack"):
     print(clr("\n  > ERROR: unitypack missing!",2))
@@ -49,15 +50,19 @@ def one():
     print(clr("\n  > Successfully loaded XDT data! You can now start running functions!\n"))
 
     while True:
-        cmd = input(clr("  > "))
+        cmd = input(clr("  > ")); print()
         if cmd == "exit": break
-        print()
-        try: exec(cmd) #exec(f"print({cmd})")
-        except Exception as err: print(clr(f"  > ERROR: {err}",2))
-        print()
+        elif cmd == "save": 
+            counter = 1
+            while os.path.exists(f"NewTable_{counter}"): counter += 1
+            exec(f"tabledata.save(open('NewTable_{counter}','wb'))")
+        else:
+            try: exec(cmd) #exec(f"print({cmd})")
+            except Exception as err: print(clr(f"  > ERROR: {err}",2))
+            print()
 
 if __name__ == "__main__":
-    #filepath = os.path.dirname(__file__) # as .py
+    filepath = os.path.dirname(__file__) # as .py
     #filepath = os.path.dirname(sys.argv[0]) # as .exe
-    #os.chdir(filepath)
+    os.chdir(filepath)
     main()
