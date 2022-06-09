@@ -4,6 +4,7 @@
 #       - if both of them were commented already, you do not have to change anything :)
 
 from dankware import align, clr_banner, clr, cls
+import json
 import sys
 import os
 
@@ -27,15 +28,13 @@ def main():
                                                     
 
         """
-        
+
         cls(); print(align(clr_banner(banner)))
         print(clr("  > [1] XDT Explorer"))
-        #print(clr("  > [2] Nano Switcher"))
         print(clr("  > [0] Exit"))
         
         choice = input(clr("\n  > Choice: "))
         if choice == "1": cls(); print(align(clr_banner(banner))); one()
-        #if choice == "2": cls(); print(align(clr_banner(banner))); two()
         if choice == "0": cls(); sys.exit()
 
 def one():
@@ -52,10 +51,10 @@ def one():
     while True:
         cmd = input(clr("  > ")); print()
         if cmd == "exit": break
-        elif cmd == "save": 
-            counter = 1
-            while os.path.exists(f"NewTable_{counter}"): counter += 1
-            exec(f"tabledata.save(open('NewTable_{counter}','wb'))")
+        elif cmd == "save":
+            exec("tabledata.save(open(str(cab_path.split('\\\\')[-1]),'wb'))")
+        elif cmd == "dump-xdt":
+            exec('out = {}\nfor tname, table in xdtdata.items():\n    out[tname] = {}\n    try:\n        for dname, data in table.items(): out[tname][dname] = data\n    except: out[tname] = "<err>"\njson.dump(out, open("xdt.json", "w+"), indent=4)')
         else:
             try: exec(cmd) #exec(f"print({cmd})")
             except Exception as err: print(clr(f"  > ERROR: {err}",2))
@@ -65,4 +64,6 @@ if __name__ == "__main__":
     filepath = os.path.dirname(__file__) # as .py
     #filepath = os.path.dirname(sys.argv[0]) # as .exe
     os.chdir(filepath)
+    if not os.path.exists("dank.ff"): os.mkdir("dank.ff")
+    os.chdir("dank.ff")
     main()
