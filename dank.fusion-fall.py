@@ -1,6 +1,7 @@
 # Note: dank.fusion-fall.py is meant to be run as an .exe by default, if you would like to execute the script, make the below changes...
 #       - set mode = "exe"
 
+from genericpath import isdir
 from dankware import align, clr_banner, clr, cls
 import requests
 import time
@@ -12,8 +13,6 @@ mode = "script"
 if mode == "script": filepath = os.path.dirname(__file__) # as .py
 else:filepath = os.path.dirname(sys.argv[0]) # as .exe
 os.chdir(filepath)
-if not os.path.exists("dank.ff"): os.mkdir("dank.ff")
-os.chdir("dank.ff")
 
 if mode == "script" and not os.path.exists("unitypack"):
     print(clr("\n  > ERROR: unitypack missing!",2))
@@ -22,9 +21,14 @@ if mode == "script" and not os.path.exists("unitypack"):
     time.sleep(10); sys.exit()
 from unitypack.asset import Asset
 
+if not os.path.exists("dank.ff"): os.mkdir("dank.ff")
+os.chdir("dank.ff")
+
 try:
     from wand.image import Image
     from unitypack.modding import import_texture
+    from unitypack.modding import import_mesh
+    from unitypack.modding import import_audio
 except:
     print(clr("\n  > ERROR: ImageMagick not installed!",2))
     choice = input(clr("  > Download Now? [y/n]: "))
@@ -32,6 +36,8 @@ except:
     else: sys.exit()
     wait = input(clr("  > Hit [ENTER] after installing..."))
     from unitypack.modding import import_texture
+    from unitypack.modding import import_mesh
+    from unitypack.modding import import_audio
 
 # Dependencies for ffextract.py
 #import traceback
@@ -44,6 +50,7 @@ except:
 
 def main():
 
+    sys.setrecursionlimit(10000)
     while True:
         banner = """
 
@@ -61,18 +68,25 @@ def main():
         if choice == "1": cls(); print(align(clr_banner(banner))); one()
         if choice == "0": cls(); sys.exit()
 
+def path_id(filename: str):
+    data = str(xdtdata).split(filename)[1].split('path_id=')[1]
+    id = ''
+    for _ in data:
+        if _ != ')' and _.isdigit(): id += _
+        else: break
+    print(clr(f"  > path_id: {id}"))
+
 def one():
     
+    global xdtdata
     cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
     index = int(input(clr('  > TableData Object Index: ')))
     cab_name = str(cab_path.split('\\')[-1])
-    print(clr(f"\n  > f = open('{cab_path}', 'rb')"))
-    f = open(cab_path, 'rb')
-    print(clr("  > tabledata = Asset.from_file(f)"))
-    tabledata = Asset.from_file(f)
+    print(clr(f"  > tabledata = Asset.from_file(open('{cab_path}', 'rb'))"))
+    tabledata = Asset.from_file(open(cab_path, 'rb'))
     print(clr(f"  > xdtdata = tabledata.objects[{index}].contents"))
     xdtdata = tabledata.objects[index].contents
-    print(clr("\n  > Pre-defined functions: save, dump-xdt\n")) # add extract
+    print(clr("\n  > Pre-defined functions: save, dump-xdt, path_id('filename'), exit\n")) # add extract
 
     while True:
         cmd = input(clr("  > ")); print()
