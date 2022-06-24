@@ -1,12 +1,12 @@
-import sys
 import os
+import sys
 import traceback
 from io import BytesIO
-from unitypack.export import OBJMesh
-from unitypack.environment import UnityEnvironment
-from collections import OrderedDict
-from unitypack.object import ObjectPointer
 from PIL.ImageOps import flip
+from collections import OrderedDict
+from unitypack.export import OBJMesh
+from unitypack.object import ObjectPointer
+from unitypack.environment import UnityEnvironment
 
 def fixext(name):
 	tab = {'dds': 'png', 'nif': 'obj', 'kfm': 'obj', 'wav': 'ogg',
@@ -97,6 +97,7 @@ def handle_assetbundle(asset, outdir):
 			traceback.print_exc(file=sys.stdout)
 
 def main(path, outdir):
+	environment = UnityEnvironment()
 	environment.base_path = path; files = os.listdir(path)
 	for ent in os.listdir(path):
 		abspath = os.path.join(path, ent)
@@ -112,5 +113,4 @@ def main(path, outdir):
 
 if __name__ == '__main__':
 	if len(sys.argv) != 3: print('usage: ffextract.py indir outdir'); sys.exit(1)
-	environment = UnityEnvironment()
 	main(sys.argv[1], sys.argv[2])

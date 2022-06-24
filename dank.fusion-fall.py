@@ -1,7 +1,6 @@
 # Note: dank.fusion-fall.py is meant to be run as an .exe by default, if you would like to execute the script, make the below changes...
 #       - set mode = "exe"
 
-from genericpath import isdir
 from dankware import align, clr_banner, clr, cls
 import requests
 import time
@@ -40,33 +39,20 @@ except:
     from unitypack.modding import import_audio
 
 # Dependencies for ffextract.py
+
 #import traceback
-#from io import BytesIO
-#from unitypack.export import OBJMesh
-#from unitypack.environment import UnityEnvironment
+#from PIL.ImageOps import flip
 #from collections import OrderedDict
+#from unitypack.export import OBJMesh
 #from unitypack.object import ObjectPointer
-#from PIL import ImageOps
+#from unitypack.environment import UnityEnvironment
 
-def main():
+# functionality
 
-    sys.setrecursionlimit(10000)
-    while True:
-        banner = """
-
-    ______  _______ __   _ _     _   _______ _______
-    |     \ |_____| | \  | |____/    |______ |______
-    |_____/ |     | |  \_| |    \_ . |       |      
-                                                    
-
-        """
-
-        cls(); print(align(clr_banner(banner)))
-        print(clr("  > [1] XDT Explorer"))
-        print(clr("  > [0] Exit"))
-        choice = input(clr("\n  > Choice: "))
-        if choice == "1": cls(); print(align(clr_banner(banner))); one()
-        if choice == "0": cls(); sys.exit()
+def logger(string: str) -> str:
+    global log
+    log += string + "\n"
+    return string
 
 def path_id(filename: str):
     data = str(xdtdata).split(filename)[1].split('path_id=')[1]
@@ -76,40 +62,70 @@ def path_id(filename: str):
         else: break
     print(clr(f"  > path_id: {id}"))
 
+def dump_xdt():
+    output = {}
+    for tname, table in xdtdata.items():
+        output[tname] = {}
+        try:
+            for dname, data in table.items(): output[tname][dname] = data
+        except: output[tname] = "<err>"
+    json.dump(output, open("xdt.json", "w+"), indent=4)
+
+# main
+
 def one():
     
     global xdtdata
     cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
     index = int(input(clr('  > TableData Object Index: ')))
     cab_name = str(cab_path.split('\\')[-1])
-    print(clr(f"  > tabledata = Asset.from_file(open('{cab_path}', 'rb'))"))
+    print(clr(logger(f"  > tabledata = Asset.from_file(open('{cab_path}', 'rb'))")))
     tabledata = Asset.from_file(open(cab_path, 'rb'))
-    print(clr(f"  > xdtdata = tabledata.objects[{index}].contents"))
+    print(clr(logger(f"  > xdtdata = tabledata.objects[{index}].contents")))
     xdtdata = tabledata.objects[index].contents
-    print(clr("\n  > Pre-defined functions: save, dump-xdt, path_id('filename'), exit\n")) # add extract
+    print(clr("\n  > Pre-defined functions: dump-xdt, path_id('filename'), log, save, save-all, exit\n"))
 
     while True:
-        cmd = input(clr("  > ")); print()
+        cmd = logger(input(clr("  > "))); print()
         if cmd.lower() == "exit": break
-        elif cmd.lower() == "save":
-            tabledata.save(open(cab_name,'wb'))
-        elif cmd.lower() == "dump-xdt":
-            out = {}
-            for tname, table in xdtdata.items():
-                out[tname] = {}
-                try:
-                    for dname, data in table.items(): out[tname][dname] = data
-                except: out[tname] = "<err>"
-            json.dump(out, open("xdt.json", "w+"), indent=4)
-        #elif cmd.lower() == "extract":
-        #    counter = 1
-        #    while os.path.exists(f"{cab_name}_{counter}"): counter += 1
-        #    sys.argv.append(cab_path.replace(cab_name,'')); sys.argv.append(f"{cab_name}_{counter}")
-        #    exec(open(f"{os.path.dirname(__file__)}\\ffextract.py","r").read())
+        elif cmd.lower() == "dump-xdt": dump_xdt()
+        elif cmd.lower() == "log": open("log.txt","w+").write(log)
+        elif cmd.lower() == "save": tabledata.save(open(cab_name,'wb'))
+        elif cmd.lower() == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
         else:
             try: exec(cmd)
             except Exception as err: print(clr(f"  > ERROR: {err}",2))
             print()
 
-if __name__ == "__main__":
-    main()
+def two():
+    
+    cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
+    cab_name = str(cab_path.split('\\')[-1])
+    counter = 1
+    while os.path.exists(f"{cab_name}_{counter}"): counter += 1
+    sys.argv.append(cab_path.replace(cab_name,'')); sys.argv.append(f"{cab_name}_{counter}")
+    exec(open(f"{os.path.dirname(__file__)}\\ffextract.py","r").read())
+    sys.argv.remove(cab_path.replace(cab_name,'')); sys.argv.remove(f"{cab_name}_{counter}")
+    print(clr("\n  > Extraction Complete! Sleeping 10s..."))
+    time.sleep(10)
+
+def main():
+
+    sys.setrecursionlimit(10000)
+    while True:
+        banner = """
+    ______  _______ __   _ _     _   _______ _______
+    |     \ |_____| | \  | |____/    |______ |______
+    |_____/ |     | |  \_| |    \_ . |       |      
+                                                    
+        """
+        cls(); print(align(clr_banner(banner)))
+        print(clr("  > [1] XDT Explorer"))
+        #print(clr("  > [2] Extract"))
+        print(clr("  > [0] Exit"))
+        choice = input(clr("\n  > Choice: "))
+        if choice == "1": cls(); print(align(clr_banner(banner))); one()
+        #elif choice == "2": cls(); print(align(clr_banner(banner))); two()
+        elif choice == "0": cls(); sys.exit()
+
+if __name__ == "__main__": log = ""; main()
