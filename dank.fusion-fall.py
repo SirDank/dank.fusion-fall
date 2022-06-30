@@ -1,7 +1,4 @@
-# Note: dank.fusion-fall.py is meant to be run as an .exe by default, if you would like to execute the script, make the below changes...
-#       - set mode = "exe"
-
-from dankware import align, clr_banner, clr, cls
+from dankware import align, clr_banner, clr, cls, magenta, white
 import requests
 import time
 import json
@@ -71,6 +68,15 @@ def dump_xdt():
         except: output[tname] = "<err>"
     json.dump(output, open("xdt.json", "w+"), indent=4)
 
+def shortcut(mode, cmd, to_exec):
+    if mode == 1:
+        if "=" not in cmd: exec(f"print({to_exec})".replace('index', cmd))
+        else: cmd = cmd.split(' = '); exec(to_exec.replace('index',cmd[0]) + f" = \"{cmd[1]}\"")
+    elif mode == 2:
+        if len(cmd) == 1: exec(f"print({to_exec})".replace('index', cmd[0]))
+        else: exec(to_exec.replace('index',cmd[0]) + f" = \"{cmd[1]}\"")
+    print()
+
 # main
 
 def one():
@@ -83,21 +89,53 @@ def one():
     tabledata = Asset.from_file(open(cab_path, 'rb'))
     print(clr(logger(f"  > xdtdata = tabledata.objects[{index}].contents")))
     xdtdata = tabledata.objects[index].contents
-    print(clr("\n  > Pre-defined functions: dump-xdt, path_id('filename'), log, save, save-all, exit\n"))
+    print(clr("\n  > Pre-defined commands: dump-xdt, path_id('filename'), help, log, save, save-all, exit\n"))
 
     while True:
-        cmd = logger(input(clr("  > "))); print()
-        if cmd.lower() == "exit": break
-        elif cmd.lower() == "dump-xdt": dump_xdt()
-        elif cmd.lower() == "log": open("log.txt","w+").write(log)
-        elif cmd.lower() == "save": tabledata.save(open(cab_name,'wb'))
-        elif cmd.lower() == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
+        cmd = logger(input(f"  {magenta}> {white}")); print(); cmd_lower = cmd.lower()
+        if cmd_lower == "exit": break
+        elif cmd_lower == "dump-xdt": dump_xdt()
+        elif cmd_lower == "log": open("log.txt","w+").write(log)
+        elif cmd_lower == "save": tabledata.save(open(cab_name,'wb'))
+        elif cmd_lower == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
+        elif cmd_lower == "help":
+            print(clr("""  > Available Shortcuts With Examples:\n
+  - aswap example-sound.wav 1 example-sound > import_audio(xdtdata,'example-sound.wav',2,'example-sound')
+  - tswap example-texture.png example-texture > import_texture(xdtdata,'example-texture.png','example-texture')
+  - npc-name 3148 > print(xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'])
+  - npc-name 3148 = test name > xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'] = \"test name\"
+  - mesh 344 > print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'])
+  - mesh 344 fusion_cheese > xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'] = \"fusion_cheese\"
+  - texture 344 > print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
+  - texture 344 fusion_cheese > xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
+  - meshid 2677 > print(xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'])
+  - meshid 2675 2671 > xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'] = 2671
+  - m-info > print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
+  - m-npc 1 > print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
+  - m-npc 1 2671 > xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
+  - m-task 1 > print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'])
+  - m-task 1 2 > xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'] = 2
+  - m-tasknext 1 > print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'])
+  - m-tasknext 1 2 > xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'] = 2
+  - m-string 11666 > print(xdtdata['m_pMissionTable']['m_pMissionStringData'][11666])
+  - m-string 11666 = dee dee's herb garden > xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"\n"""))
+        elif cmd_lower.startswith('m-info '): print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('m-info ',''))])
+        elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
+        elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1])
+        elif cmd_lower.startswith('npc-name '): cmd = cmd.replace('npc-name ',''); to_exec = "xdtdata['m_pNpcTable']['m_pNpcStringData'][index]['m_strName']"; shortcut(1, cmd, to_exec)
+        elif cmd_lower.startswith('mesh '): cmd = cmd.replace('mesh ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMMeshModelString']"; shortcut(2, cmd, to_exec)
+        elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
+        elif cmd_lower.startswith('meshid '): cmd = cmd.replace('meshid ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcData'][index]['m_iMesh']"; shortcut(2, cmd, to_exec)
+        elif cmd_lower.startswith('m-npc '): cmd = cmd.replace('m-npc ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHNPCID']"; shortcut(2, cmd, to_exec)
+        elif cmd_lower.startswith('m-task '): cmd = cmd.replace('m-task ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHTaskID']"; shortcut(2, cmd, to_exec)
+        elif cmd_lower.startswith('m-tasknext '): cmd = cmd.replace('m-tasknext ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iSUOutgoingTask']"; shortcut(2, cmd, to_exec)
+        elif cmd_lower.startswith('m-string '): cmd = cmd.replace('m-string ',''); to_exec = "xdtdata['m_pMissionTable']['m_pMissionStringData'][index]"; shortcut(1, cmd, to_exec)
         else:
             try: exec(cmd)
             except Exception as err: print(clr(f"  > ERROR: {err}",2))
             print()
 
-def two():
+'''def two():
     
     cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
     cab_name = str(cab_path.split('\\')[-1])
@@ -107,7 +145,7 @@ def two():
     exec(open(f"{os.path.dirname(__file__)}\\ffextract.py","r").read())
     sys.argv.remove(cab_path.replace(cab_name,'')); sys.argv.remove(f"{cab_name}_{counter}")
     print(clr("\n  > Extraction Complete! Sleeping 10s..."))
-    time.sleep(10)
+    time.sleep(10)'''
 
 def main():
 
@@ -121,11 +159,11 @@ def main():
         """
         cls(); print(align(clr_banner(banner)))
         print(clr("  > [1] XDT Explorer"))
-        #print(clr("  > [2] Extract"))
+        #print(clr("  > [2] Extract")) ###
         print(clr("  > [0] Exit"))
         choice = input(clr("\n  > Choice: "))
         if choice == "1": cls(); print(align(clr_banner(banner))); one()
-        #elif choice == "2": cls(); print(align(clr_banner(banner))); two()
+        #elif choice == "2": cls(); print(align(clr_banner(banner))); two() ###
         elif choice == "0": cls(); sys.exit()
 
 if __name__ == "__main__": log = ""; main()
