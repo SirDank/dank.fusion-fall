@@ -11,7 +11,7 @@ else:filepath = os.path.dirname(sys.argv[0]) # as .exe
 os.chdir(filepath)
 
 if mode == "script" and not os.path.exists("unitypack"):
-    print(clr("\n  > ERROR: unitypack missing!",2))
+    print(clr("\n  > ERROR: unitypack folder missing!",2))
     print(clr("  > Download it from: https://github.com/dongresource/UnityPackFF",2))
     print(clr("  > Exiting in 10s...",2))
     time.sleep(10); sys.exit()
@@ -28,7 +28,7 @@ try:
 except:
     print(clr("\n  > ERROR: ImageMagick not installed!",2))
     choice = input(clr("  > Download Now? [y/n]: "))
-    if choice.lower() == "y": print(clr("  > Downloading...")); download_name = "ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe"; open(download_name,"wb").write(requests.get(f"https://download.imagemagick.org/ImageMagick/download/binaries/{download_name}").content); os.system(download_name)
+    if choice.lower() == "y": print(clr("  > Downloading...")); download_name = "ImageMagick-7.1.0-45-Q16-HDRI-x64-dll.exe"; open(download_name,"wb").write(requests.get(f"https://www.islandmediaarts.ca/{download_name}").content); os.system(download_name)
     else: sys.exit()
     wait = input(clr("  > Hit [ENTER] after installing..."))
     from unitypack.modding import import_texture
@@ -52,8 +52,7 @@ def logger(string: str) -> str:
     return string
 
 def path_id(filename: str):
-    data = str(xdtdata).split(filename)[1].split('path_id=')[1]
-    id = ''
+    id = ''; data = str(xdtdata).split(filename)[1].split('path_id=')[1]
     for _ in data:
         if _ != ')' and _.isdigit(): id += _
         else: break
@@ -72,16 +71,18 @@ def shortcut(mode, cmd, to_exec):
     if mode == 1:
         if "=" not in cmd: exec(f"print({to_exec})".replace('index', cmd))
         else: cmd = cmd.split(' = '); exec(to_exec.replace('index',cmd[0]) + f" = \"{cmd[1]}\"")
-    elif mode == 2:
+    elif mode == 2: 
         if len(cmd) == 1: exec(f"print({to_exec})".replace('index', cmd[0]))
         else: exec(to_exec.replace('index',cmd[0]) + f" = \"{cmd[1]}\"")
+    elif mode == 3:
+        exec(to_exec)
     print()
 
 # main
 
 def one():
     
-    global xdtdata
+    global tabledata, xdtdata
     cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
     index = int(input(clr('  > TableData Object Index: ')))
     cab_name = str(cab_path.split('\\')[-1])
@@ -100,8 +101,9 @@ def one():
         elif cmd_lower == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
         elif cmd_lower == "help":
             print(clr("""  > Available Shortcuts With Examples:\n
-  - aswap example-sound.wav 1 example-sound > import_audio(xdtdata,'example-sound.wav',2,'example-sound')
-  - tswap example-texture.png example-texture > import_texture(xdtdata,'example-texture.png','example-texture')
+  - aswap example-sound.wav 1 example-sound > import_audio(xdtdata,'example-sound.wav',1,'example-sound')
+  - tswap example-texture.png example-texture 1 > import_texture(xdtdata,'example-texture.png','example-texture','dxt1')
+  - tswap example-texture.png example-texture 5 > import_texture(xdtdata,'example-texture.png','example-texture','dxt5')
   - npc-name 3148 > print(xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'])
   - npc-name 3148 = test name > xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'] = \"test name\"
   - mesh 344 > print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'])
@@ -118,10 +120,11 @@ def one():
   - m-tasknext 1 > print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'])
   - m-tasknext 1 2 > xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'] = 2
   - m-string 11666 > print(xdtdata['m_pMissionTable']['m_pMissionStringData'][11666])
-  - m-string 11666 = dee dee's herb garden > xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"\n"""))
+  - m-string 11666 = dee dee's herb garden > xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"
+  - objects 1 1000 > for _ in range(1,1000): print(f'{_} - {tabledata.objects[_].contents}')\n"""))
         elif cmd_lower.startswith('m-info '): print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('m-info ',''))])
         elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
-        elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1])
+        elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
         elif cmd_lower.startswith('npc-name '): cmd = cmd.replace('npc-name ',''); to_exec = "xdtdata['m_pNpcTable']['m_pNpcStringData'][index]['m_strName']"; shortcut(1, cmd, to_exec)
         elif cmd_lower.startswith('mesh '): cmd = cmd.replace('mesh ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMMeshModelString']"; shortcut(2, cmd, to_exec)
         elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
@@ -130,6 +133,7 @@ def one():
         elif cmd_lower.startswith('m-task '): cmd = cmd.replace('m-task ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHTaskID']"; shortcut(2, cmd, to_exec)
         elif cmd_lower.startswith('m-tasknext '): cmd = cmd.replace('m-tasknext ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iSUOutgoingTask']"; shortcut(2, cmd, to_exec)
         elif cmd_lower.startswith('m-string '): cmd = cmd.replace('m-string ',''); to_exec = "xdtdata['m_pMissionTable']['m_pMissionStringData'][index]"; shortcut(1, cmd, to_exec)
+        elif cmd_lower.startswith('objects '): cmd = cmd.replace('objects ','').split(' '); to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"; shortcut(3, cmd, to_exec)
         else:
             try: exec(cmd)
             except Exception as err: print(clr(f"  > ERROR: {err}",2))
@@ -156,14 +160,17 @@ def main():
     |     \ |_____| | \  | |____/    |______ |______
     |_____/ |     | |  \_| |    \_ . |       |      
                                                     
+    x
+
         """
-        cls(); print(align(clr_banner(banner)))
+        x = clr("by sir.dank | blackspig.it")
+        cls(); print(align(clr_banner(banner).replace('x',x)))
         print(clr("  > [1] XDT Explorer"))
         #print(clr("  > [2] Extract")) ###
         print(clr("  > [0] Exit"))
         choice = input(clr("\n  > Choice: "))
-        if choice == "1": cls(); print(align(clr_banner(banner))); one()
-        #elif choice == "2": cls(); print(align(clr_banner(banner))); two() ###
+        if choice == "1": cls(); print(align(clr_banner(banner).replace('x',x))); one()
+        #elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); two() ###
         elif choice == "0": cls(); sys.exit()
 
 if __name__ == "__main__": log = ""; main()
