@@ -28,7 +28,7 @@ try:
 except:
     print(clr("\n  > ERROR: ImageMagick not installed!",2))
     choice = input(clr("  > Download Now? [y/n]: "))
-    if choice.lower() == "y": print(clr("  > Downloading...")); download_name = "ImageMagick-7.1.0-45-Q16-HDRI-x64-dll.exe"; open(download_name,"wb").write(requests.get(f"https://www.islandmediaarts.ca/{download_name}").content); os.system(download_name)
+    if choice.lower() == "y": print(clr("  > Downloading...")); download_name = "ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe"; open(download_name,"wb").write(requests.get(f"https://www.islandmediaarts.ca/{download_name}").content); os.system(download_name)
     else: sys.exit()
     wait = input(clr("  > Hit [ENTER] after installing..."))
     from unitypack.modding import import_texture
