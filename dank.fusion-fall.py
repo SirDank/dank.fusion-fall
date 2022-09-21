@@ -1,9 +1,10 @@
-from dankware import align, clr_banner, clr, cls, magenta, white
-import requests
-import time
-import json
-import sys
 import os
+import sys
+import json
+import time
+import shutil
+import requests
+from dankware import align, clr_banner, clr, cls, magenta, white
 
 mode = "script"
 if mode == "script": filepath = os.path.dirname(__file__) # as .py
@@ -67,6 +68,18 @@ def dump_xdt():
         except: output[tname] = "<err>"
     json.dump(output, open("xdt.json", "w+"), indent=4)
 
+def fix_bundles():
+    try: os.mkdir("bundles_to_fix"); wait = input(clr("  > Created bundles_to_fix folder! Hit [ENTER] after adding your files!"))
+    except: pass
+    try: os.mkdir("fixed_bundles")
+    except: pass
+    bundles = os.listdir("bundles_to_fix")
+    for bundle in bundles:
+        original_bytes = open(f"bundles_to_fix/{bundle}", 'rb').read()
+        modded_bytes = b'UnityWeb' + original_bytes[original_bytes.find(b'\x00'):]
+        open(f"fixed_bundles/{bundle}", 'wb+').write(modded_bytes)
+    shutil.rmtree("bundles_to_fix"); print(clr(f"\n  > Fixed [{len(bundles)}] bundles!\n"))
+
 def shortcut(mode, cmd, to_exec):
     if mode == 1:
         if "=" not in cmd: exec(f"print({to_exec})".replace('index', cmd))
@@ -90,12 +103,13 @@ def one():
     tabledata = Asset.from_file(open(cab_path, 'rb'))
     print(clr(logger(f"  > xdtdata = tabledata.objects[{index}].contents")))
     xdtdata = tabledata.objects[index].contents
-    print(clr("\n  > Pre-defined commands: dump-xdt, path_id('filename'), help, log, save, save-all, exit\n"))
+    print(clr("\n  > Pre-defined commands: dump-xdt, path_id('filename'), fix-bundles, help, log, save, save-all, exit\n"))
 
     while True:
         cmd = logger(input(f"  {magenta}> {white}")); print(); cmd_lower = cmd.lower()
         if cmd_lower == "exit": break
         elif cmd_lower == "dump-xdt": dump_xdt()
+        elif cmd_lower == "fix-bundles": fix_bundles()
         elif cmd_lower == "log": open("log.txt","w+").write(log)
         elif cmd_lower == "save": tabledata.save(open(cab_name,'wb'))
         elif cmd_lower == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
@@ -165,11 +179,13 @@ def main():
         """
         x = clr("by sir.dank | blackspig.it")
         cls(); print(align(clr_banner(banner).replace('x',x)))
-        print(clr("  > [1] XDT Explorer"))
+        print(clr("  > [1] Asset Explorer"))
+        print(clr("  > [2] Fix Bundles"))
         #print(clr("  > [2] Extract")) ###
         print(clr("  > [0] Exit"))
         choice = input(clr("\n  > Choice: "))
         if choice == "1": cls(); print(align(clr_banner(banner).replace('x',x))); one()
+        elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles(); print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
         #elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); two() ###
         elif choice == "0": cls(); sys.exit()
 
