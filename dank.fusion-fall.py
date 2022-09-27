@@ -6,12 +6,12 @@ import shutil
 import requests
 from dankware import align, clr_banner, clr, cls, magenta, white
 
-mode = "script"
-if mode == "script": filepath = os.path.dirname(__file__) # as .py
+exec_mode = "script"
+if exec_mode == "script": filepath = os.path.dirname(__file__) # as .py
 else:filepath = os.path.dirname(sys.argv[0]) # as .exe
 os.chdir(filepath)
 
-if mode == "script" and not os.path.exists("unitypack"):
+if exec_mode == "script" and not os.path.exists("unitypack"):
     print(clr("\n  > ERROR: unitypack folder missing!",2))
     print(clr("  > Download it from: https://github.com/dongresource/UnityPackFF",2))
     print(clr("  > Exiting in 10s...",2))
