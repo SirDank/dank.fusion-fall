@@ -4,34 +4,46 @@ import json
 import time
 import shutil
 import requests
-from dankware import align, clr_banner, clr, cls, magenta, white
+from dankware import align, clr_banner, clr, cls, magenta, white, chdir
 
 exec_mode = "script"
-if exec_mode == "script": filepath = os.path.dirname(__file__) # as .py
-else:filepath = os.path.dirname(sys.argv[0]) # as .exe
-os.chdir(filepath)
-
-if exec_mode == "script" and not os.path.exists("unitypack"):
-    print(clr("\n  > ERROR: unitypack folder missing!",2))
-    print(clr("  > Download it from: https://github.com/dongresource/UnityPackFF",2))
-    print(clr("  > Exiting in 10s...",2))
-    time.sleep(10); sys.exit()
-from unitypack.asset import Asset
-
-if not os.path.exists("dank.ff"): os.mkdir("dank.ff")
+exec(chdir(exec_mode))
+try: os.mkdir("dank.ff")
+except: pass
 os.chdir("dank.ff")
 
+if exec_mode == "script" and not os.path.exists("unitypack"):
+
+    print(clr("\n  > ERROR: unitypack folder missing!",2))
+    print(clr("  > Download it from: https://github.com/dongresource/UnityPackFF",2))
+    print(clr("  > [NOTE] UnityPackFF is slightly modified for dank.ff",2))
+    print(clr("  > Exiting in 10s...",2))
+    time.sleep(10); sys.exit()
+
+from unitypack.asset import Asset
+
 try:
+
     from wand.image import Image
     from unitypack.modding import import_texture
     from unitypack.modding import import_mesh
     from unitypack.modding import import_audio
+
 except:
+
     print(clr("\n  > ERROR: ImageMagick not installed!",2))
+
     choice = input(clr("  > Download Now? [y/n]: "))
-    if choice.lower() == "y": print(clr("  > Downloading...")); download_name = "ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe"; open(download_name,"wb").write(requests.get(f"https://www.islandmediaarts.ca/{download_name}").content); os.system(download_name)
+    if choice.lower() == "y":
+    
+        print(clr("  > Downloading..."))
+        download_name = "ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe"
+        open(download_name,"wb").write(requests.get(f"https://www.islandmediaarts.ca/{download_name}").content)
+        os.system(download_name)
+
     else: sys.exit()
-    wait = input(clr("  > Hit [ENTER] after installing..."))
+
+    input(clr("  > Hit [ENTER] after installing..."))
     from unitypack.modding import import_texture
     from unitypack.modding import import_mesh
     from unitypack.modding import import_audio
@@ -48,11 +60,13 @@ except:
 # functionality
 
 def logger(string: str) -> str:
+
     global log
     log += string + "\n"
     return string
 
 def path_id(filename: str):
+
     id = ''; data = str(xdtdata).split(filename)[1].split('path_id=')[1]
     for _ in data:
         if _ != ')' and _.isdigit(): id += _
@@ -60,6 +74,7 @@ def path_id(filename: str):
     print(clr(f"  > path_id: {id}"))
 
 def dump_xdt():
+
     output = {}
     for tname, table in xdtdata.items():
         output[tname] = {}
@@ -69,18 +84,23 @@ def dump_xdt():
     json.dump(output, open("xdt.json", "w+"), indent=4)
 
 def fix_bundles():
-    try: os.mkdir("bundles_to_fix"); wait = input(clr("  > Created bundles_to_fix folder! Hit [ENTER] after adding your files!"))
+
+    try: os.mkdir("bundles_to_fix"); input(clr("  > Created bundles_to_fix folder! Hit [ENTER] after adding your files!"))
     except: pass
     try: os.mkdir("fixed_bundles")
     except: pass
+
     bundles = os.listdir("bundles_to_fix")
     for bundle in bundles:
         original_bytes = open(f"bundles_to_fix/{bundle}", 'rb').read()
         modded_bytes = b'UnityWeb' + original_bytes[original_bytes.find(b'\x00'):]
         open(f"fixed_bundles/{bundle}", 'wb+').write(modded_bytes)
+
     shutil.rmtree("bundles_to_fix"); print(clr(f"\n  > Fixed [{len(bundles)}] bundles!\n"))
+    print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
 
 def shortcut(mode, cmd, to_exec):
+
     if mode == 1:
         if "=" not in cmd: exec(f"print({to_exec})".replace('index', cmd))
         else: cmd = cmd.split(' = '); exec(to_exec.replace('index',cmd[0]) + f" = \"{cmd[1]}\"")
@@ -96,6 +116,7 @@ def shortcut(mode, cmd, to_exec):
 def one():
     
     global tabledata, xdtdata
+
     cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
     index = int(input(clr('  > TableData Object Index: ')))
     cab_name = str(cab_path.split('\\')[-1])
@@ -135,7 +156,10 @@ def one():
         elif cmd_lower == "dump-xdt": dump_xdt()
         elif cmd_lower == "fix-bundles": fix_bundles()
         elif cmd_lower == "log": open("log.txt","w+").write(log)
-        elif cmd_lower == "save": tabledata.save(open(cab_name,'wb'))
+        elif cmd_lower == "save":
+            try: os.remove(cab_name)
+            except: pass
+            tabledata.save(open(cab_name,'wb'))
         elif cmd_lower == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
         elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
         elif cmd_lower.startswith('imesh '): cmd = cmd.replace('imesh ','').split(' '); import_mesh(xdtdata, cmd[0], cmd[1])
@@ -171,23 +195,16 @@ def main():
 
     sys.setrecursionlimit(10000)
     while True:
-        banner = """
-    ______  _______ __   _ _     _   _______ _______
-    |     \ |_____| | \  | |____/    |______ |______
-    |_____/ |     | |  \_| |    \_ . |       |      
-                                                    
-    x
-
-        """
-        x = clr("by sir.dank | blackspig.it")
+        banner = '\n    ______  _______ __   _ _     _   _______ _______\n    |     \\ |_____| | \\  | |____/    |______ |______\n    |_____/ |     | |  \\_| |    \\_ . |       |      \n                                                    \n    x\n\n        '
+        x = clr("by sir.dank | nuclearff.com")
         cls(); print(align(clr_banner(banner).replace('x',x)))
-        print(clr("  > [1] Asset Explorer"))
+        print(clr("  > [1] CAB Explorer"))
         print(clr("  > [2] Fix Bundles"))
         #print(clr("  > [2] Extract")) ###
         print(clr("  > [0] Exit"))
         choice = input(clr("\n  > Choice: "))
         if choice == "1": cls(); print(align(clr_banner(banner).replace('x',x))); one()
-        elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles(); print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
+        elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles()
         #elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); two() ###
         elif choice == "0": cls(); sys.exit()
 
