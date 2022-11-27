@@ -4,7 +4,7 @@ import json
 import time
 import shutil
 import requests
-from dankware import align, clr_banner, clr, cls, magenta, white, chdir
+from dankware import align, clr_banner, clr, cls, magenta, white, chdir, err
 
 exec_mode = "script"
 exec(chdir(exec_mode))
@@ -43,7 +43,7 @@ except:
 
     else: sys.exit()
 
-    input(clr("  > Hit [ENTER] after installing..."))
+    input(clr("  > Hit [ENTER] after installing... "))
     from unitypack.modding import import_texture
     from unitypack.modding import import_mesh
     from unitypack.modding import import_audio
@@ -85,7 +85,7 @@ def dump_xdt():
 
 def fix_bundles():
 
-    try: os.mkdir("bundles_to_fix"); input(clr("  > Created bundles_to_fix folder! Hit [ENTER] after adding your files!"))
+    try: os.mkdir("bundles_to_fix"); input(clr("  > Created bundles_to_fix folder! Hit [ENTER] after adding your files... "))
     except: pass
     try: os.mkdir("fixed_bundles")
     except: pass
@@ -97,7 +97,18 @@ def fix_bundles():
         open(f"fixed_bundles/{bundle}", 'wb+').write(modded_bytes)
 
     shutil.rmtree("bundles_to_fix"); print(clr(f"\n  > Fixed [{len(bundles)}] bundles!\n"))
-    print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
+
+def tswap_mass(dxt_mode):
+
+    try: os.mkdir("tswap_textures"); input(clr("  > Created tswap_textures folder! Hit [ENTER] after adding your files... "))
+    except: pass
+
+    textures = os.listdir("tswap_textures")
+    for texture in textures:
+        try: import_texture(xdtdata, texture, texture.split('.')[0], f'dxt{dxt_mode}')
+        except: print(clr(err(sys.exc_info()), 2))
+        
+    print(clr(f"\n  > Imported [{len(textures)}] textures!\n"))
 
 def shortcut(mode, cmd, to_exec):
 
@@ -151,7 +162,9 @@ def one():
   - texture 344  >  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
   - texture 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
   - tswap example-texture.png example-texture 1  >  import_texture(xdtdata,'example-texture.png','example-texture','dxt1')
-  - tswap example-texture.png example-texture 5  >  import_texture(xdtdata,'example-texture.png','example-texture','dxt5')\n"""))
+  - tswap example-texture.png example-texture 5  >  import_texture(xdtdata,'example-texture.png','example-texture','dxt5')
+  - tswap-mass 1  >  mass import_texture (fmt='dxt1')
+  - tswap-mass 5  >  mass import_texture (fmt='dxt5')\n"""))
         if cmd_lower == "exit": break
         elif cmd_lower == "dump-xdt": dump_xdt()
         elif cmd_lower == "fix-bundles": fix_bundles()
@@ -174,9 +187,10 @@ def one():
         elif cmd_lower.startswith('objects '): cmd = cmd.replace('objects ','').split(' '); to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"; shortcut(3, cmd, to_exec)
         elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
         elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
+        elif cmd_lower.startswith('tswap-mass '): cmd = cmd.replace('tswap-mass ','').replace(' ',''); tswap_mass(cmd)
         else:
             try: exec(cmd)
-            except Exception as err: print(clr(f"  > ERROR: {err}",2))
+            except: print(clr(err(sys.exc_info()), 2))
             print()
 
 '''def two():
@@ -204,7 +218,7 @@ def main():
         print(clr("  > [0] Exit"))
         choice = input(clr("\n  > Choice: "))
         if choice == "1": cls(); print(align(clr_banner(banner).replace('x',x))); one()
-        elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles()
+        elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles(); print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
         #elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); two() ###
         elif choice == "0": cls(); sys.exit()
 
