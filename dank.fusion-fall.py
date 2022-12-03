@@ -28,6 +28,7 @@ try:
     from unitypack.modding import import_texture
     from unitypack.modding import import_mesh
     from unitypack.modding import import_audio
+    from unitypack.export import OBJMesh
 
 except:
 
@@ -47,6 +48,7 @@ except:
     from unitypack.modding import import_texture
     from unitypack.modding import import_mesh
     from unitypack.modding import import_audio
+    from unitypack.export import OBJMesh
 
 # Dependencies for ffextract.py
 
@@ -105,7 +107,7 @@ def tswap_mass(dxt_mode):
 
     textures = os.listdir("tswap_textures")
     for texture in textures:
-        try: import_texture(xdtdata, texture, texture.split('.')[0], f'dxt{dxt_mode}')
+        try: import_texture(xdtdata, f"tswap_textures/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
         except: print(clr(err(sys.exc_info()), 2))
         
     print(clr(f"\n  > Imported [{len(textures)}] textures!\n"))
@@ -140,8 +142,10 @@ def one():
     while True:
         cmd = logger(input(f"  {magenta}> {white}")); print(); cmd_lower = cmd.lower()
         if cmd_lower == "help":
+
             print(clr("""  > Available Shortcuts With Examples:\n
   - aswap example-sound.wav 1 example-sound  >  import_audio(xdtdata,'example-sound.wav',1,'example-sound')
+  - export example.obj  >  open('example.obj','w').write(OBJMesh(xdtdata).export())
   - imesh npc_alienx.obj npc_alienx  >  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
   - m-info  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
   - m-npc 1 2671  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
@@ -165,16 +169,26 @@ def one():
   - tswap example-texture.png example-texture 5  >  import_texture(xdtdata,'example-texture.png','example-texture','dxt5')
   - tswap-mass 1  >  mass import_texture (fmt='dxt1')
   - tswap-mass 5  >  mass import_texture (fmt='dxt5')\n"""))
-        if cmd_lower == "exit": break
-        elif cmd_lower == "dump-xdt": dump_xdt()
+        
+        elif cmd_lower == "exit": break
+        elif cmd_lower == "dump-xdt": 
+            try: dump_xdt()
+            except: print(clr(err(sys.exc_info()), 2))
         elif cmd_lower == "fix-bundles": fix_bundles()
         elif cmd_lower == "log": open("log.txt","w+").write(log)
         elif cmd_lower == "save":
             try: os.remove(cab_name)
             except: pass
             tabledata.save(open(cab_name,'wb'))
-        elif cmd_lower == "save-all": dump_xdt(); open("log.txt","w+").write(log); tabledata.save(open(cab_name,'wb'))
+        elif cmd_lower == "save-all":
+            try: dump_xdt()
+            except: print(clr(err(sys.exc_info()), 2)); continue
+            open("log.txt","w+").write(log)
+            try: os.remove(cab_name)
+            except: pass
+            tabledata.save(open(cab_name,'wb'))
         elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
+        elif cmd_lower.startswith('export '): cmd = cmd.replace('export ','').replace(' ',''); open(cmd,'w').write(OBJMesh(xdtdata).export())
         elif cmd_lower.startswith('imesh '): cmd = cmd.replace('imesh ','').split(' '); import_mesh(xdtdata, cmd[0], cmd[1])
         elif cmd_lower.startswith('m-info '): print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('m-info ',''))])
         elif cmd_lower.startswith('m-npc '): cmd = cmd.replace('m-npc ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHNPCID']"; shortcut(2, cmd, to_exec)
