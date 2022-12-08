@@ -4,7 +4,7 @@ import json
 import time
 import shutil
 import requests
-from dankware import align, clr_banner, clr, cls, magenta, white, chdir, err
+from dankware import align, clr_banner, clr, cls, magenta, white, green, reset, chdir, err
 
 exec_mode = "script"
 exec(chdir(exec_mode))
@@ -25,9 +25,8 @@ from unitypack.asset import Asset
 try:
 
     from wand.image import Image
-    from unitypack.modding import import_texture
-    from unitypack.modding import import_mesh
-    from unitypack.modding import import_audio
+    from unitypack.modding import import_texture, import_mesh, import_audio
+    from unitypack.object import FFOrderedDict, ObjectPointer
     from unitypack.export import OBJMesh
 
 except:
@@ -45,9 +44,8 @@ except:
     else: sys.exit()
 
     input(clr("  > Hit [ENTER] after installing... "))
-    from unitypack.modding import import_texture
-    from unitypack.modding import import_mesh
-    from unitypack.modding import import_audio
+    from unitypack.modding import import_texture, import_mesh, import_audio
+    from unitypack.object import FFOrderedDict, ObjectPointer
     from unitypack.export import OBJMesh
 
 # Dependencies for ffextract.py
@@ -130,8 +128,8 @@ def one():
     
     global tabledata, xdtdata
 
-    cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ')).replace('"','')
-    index = int(input(clr('  > TableData Object Index: ')))
+    cab_path = input(clr('  > Drag and Drop Custom Asset Bundle: ') + green).replace('"','')
+    index = int(input(clr('  > TableData Object Index: ') + green))
     cab_name = str(cab_path.split('\\')[-1])
     print(clr(logger(f"  > tabledata = Asset.from_file(open('{cab_path}', 'rb'))")))
     tabledata = Asset.from_file(open(cab_path, 'rb'))
@@ -140,72 +138,83 @@ def one():
     print(clr("\n  > Pre-defined commands: dump-xdt, path_id('filename'), fix-bundles, help, log, save, save-all, exit\n"))
 
     while True:
-        cmd = logger(input(f"  {magenta}> {white}")); print(); cmd_lower = cmd.lower()
-        if cmd_lower == "help":
+        try:
+            cmd = logger(input(f"  {magenta}> {green}")); print(reset); cmd_lower = cmd.lower()
+            if cmd_lower == "help":
 
-            print(clr("""  > Available Shortcuts With Examples:\n
-  - aswap example-sound.wav 1 example-sound  >  import_audio(xdtdata,'example-sound.wav',1,'example-sound')
-  - export example.obj  >  open('example.obj','w').write(OBJMesh(xdtdata).export())
-  - imesh npc_alienx.obj npc_alienx  >  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
-  - m-info  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
-  - m-npc 1 2671  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
-  - m-npc 1  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
-  - m-string 11666 = dee dee's herb garden  >  xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"
-  - m-string 11666  >  print(xdtdata['m_pMissionTable']['m_pMissionStringData'][11666])
-  - m-task 1 2  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'] = 2
-  - m-task 1  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'])
-  - m-tasknext 1 2  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'] = 2
-  - m-tasknext 1  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'])
-  - mesh 344  >  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'])
-  - mesh 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'] = \"fusion_cheese\"
-  - meshid 2675 2671  >  xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'] = 2671
-  - meshid 2677  >  print(xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'])
-  - npc-name 3148 = test name  >  xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'] = \"test name\"
-  - npc-name 3148  >  print(xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'])
-  - objects 1 1000  >  for _ in range(1,1000): print(f'{_} - {tabledata.objects[_].contents}')
-  - texture 344  >  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
-  - texture 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
-  - tswap example-texture.png example-texture 1  >  import_texture(xdtdata,'example-texture.png','example-texture','dxt1')
-  - tswap example-texture.png example-texture 5  >  import_texture(xdtdata,'example-texture.png','example-texture','dxt5')
-  - tswap-mass 1  >  mass import_texture (fmt='dxt1')
-  - tswap-mass 5  >  mass import_texture (fmt='dxt5')\n"""))
-        
-        elif cmd_lower == "exit": break
-        elif cmd_lower == "dump-xdt": 
-            try: dump_xdt()
-            except: print(clr(err(sys.exc_info()), 2))
-        elif cmd_lower == "fix-bundles": fix_bundles()
-        elif cmd_lower == "log": open("log.txt","w+").write(log)
-        elif cmd_lower == "save":
-            try: os.remove(cab_name)
-            except: pass
-            tabledata.save(open(cab_name,'wb'))
-        elif cmd_lower == "save-all":
-            try: dump_xdt()
-            except: print(clr(err(sys.exc_info()), 2)); continue
-            open("log.txt","w+").write(log)
-            try: os.remove(cab_name)
-            except: pass
-            tabledata.save(open(cab_name,'wb'))
-        elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
-        elif cmd_lower.startswith('export '): cmd = cmd.replace('export ','').replace(' ',''); open(cmd,'w').write(OBJMesh(xdtdata).export())
-        elif cmd_lower.startswith('imesh '): cmd = cmd.replace('imesh ','').split(' '); import_mesh(xdtdata, cmd[0], cmd[1])
-        elif cmd_lower.startswith('m-info '): print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('m-info ',''))])
-        elif cmd_lower.startswith('m-npc '): cmd = cmd.replace('m-npc ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHNPCID']"; shortcut(2, cmd, to_exec)
-        elif cmd_lower.startswith('m-string '): cmd = cmd.replace('m-string ',''); to_exec = "xdtdata['m_pMissionTable']['m_pMissionStringData'][index]"; shortcut(1, cmd, to_exec)
-        elif cmd_lower.startswith('m-task '): cmd = cmd.replace('m-task ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHTaskID']"; shortcut(2, cmd, to_exec)
-        elif cmd_lower.startswith('m-tasknext '): cmd = cmd.replace('m-tasknext ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iSUOutgoingTask']"; shortcut(2, cmd, to_exec)
-        elif cmd_lower.startswith('mesh '): cmd = cmd.replace('mesh ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMMeshModelString']"; shortcut(2, cmd, to_exec)
-        elif cmd_lower.startswith('meshid '): cmd = cmd.replace('meshid ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcData'][index]['m_iMesh']"; shortcut(2, cmd, to_exec)
-        elif cmd_lower.startswith('npc-name '): cmd = cmd.replace('npc-name ',''); to_exec = "xdtdata['m_pNpcTable']['m_pNpcStringData'][index]['m_strName']"; shortcut(1, cmd, to_exec)
-        elif cmd_lower.startswith('objects '): cmd = cmd.replace('objects ','').split(' '); to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"; shortcut(3, cmd, to_exec)
-        elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
-        elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
-        elif cmd_lower.startswith('tswap-mass '): cmd = cmd.replace('tswap-mass ','').replace(' ',''); tswap_mass(cmd)
-        else:
-            try: exec(cmd)
-            except: print(clr(err(sys.exc_info()), 2))
-            print()
+                print(clr("""  > Available Shortcuts With Examples:\n
+ - aimport sound.wav 22.5 sound  >  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
+ - aswap sound.wav 22.5 sound  >  import_audio(xdtdata,'sound.wav',22.5,'sound')
+ - export example.obj  >  open('example.obj','w').write(OBJMesh(xdtdata).export())
+ - imesh npc_alienx.obj npc_alienx  >  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
+ - ms-info  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
+ - ms-npc 1 2671  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
+ - ms-npc 1  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
+ - ms-string 11666 = dee dee's herb garden  >  xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"
+ - ms-string 11666  >  print(xdtdata['m_pMissionTable']['m_pMissionStringData'][11666])
+ - ms-task 1 2  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'] = 2
+ - ms-task 1  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'])
+ - ms-tasknext 1 2  >  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'] = 2
+ - ms-tasknext 1  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'])
+ - mesh 344  >  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'])
+ - mesh 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'] = \"fusion_cheese\"
+ - meshid 2675 2671  >  xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'] = 2671
+ - meshid 2677  >  print(xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'])
+ - npc-name 3148 = test name  >  xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'] = \"test name\"
+ - npc-name 3148  >  print(xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'])
+ - objects 1 1000  >  for _ in range(1,1000): print(f'{_} - {tabledata.objects[_].contents}')
+ - texture 344  >  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
+ - texture 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
+ - timport texture.png texture 1  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - timport texture.png texture 5  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - tswap texture.png texture 1  >  import_texture(xdtdata,'texture.png','texture','dxt1')
+ - tswap texture.png texture 5  >  import_texture(xdtdata,'texture.png','texture','dxt5')
+ - tswap-mass 1  >  mass import_texture (fmt='dxt1')
+ - tswap-mass 5  >  mass import_texture (fmt='dxt5')\n"""))
+            
+            elif cmd_lower == "exit": break
+            elif cmd_lower == "dump-xdt": 
+                try: dump_xdt()
+                except: print(clr(err(sys.exc_info()), 2))
+            elif cmd_lower == "fix-bundles": fix_bundles()
+            elif cmd_lower == "log": open("log.txt","w+").write(log)
+            elif cmd_lower == "save":
+                try: os.remove(cab_name)
+                except: pass
+                try: tabledata.save(open(cab_name,'wb'))
+                except: print(clr(err(sys.exc_info()), 2))
+            elif cmd_lower == "save-all":
+                try: dump_xdt()
+                except: print(clr(err(sys.exc_info()), 2)); continue
+                open("log.txt","w+").write(log)
+                try: os.remove(cab_name)
+                except: pass
+                try: tabledata.save(open(cab_name,'wb'))
+                except: print(clr(err(sys.exc_info()), 2)) 
+
+            elif cmd_lower.startswith('aimport '): cmd = cmd.replace('aimport ','').split(' '); new_audio = tabledata.add_object(83); import_audio(new_audio.contents,cmd[0],int(cmd[1]),cmd[2]); tabledata.add2ab(cmd[0],new_audio.path_id)
+            elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
+            elif cmd_lower.startswith('export '): cmd = cmd.replace('export ','').replace(' ',''); open(cmd,'w').write(OBJMesh(xdtdata).export())
+            elif cmd_lower.startswith('imesh '): cmd = cmd.replace('imesh ','').split(' '); import_mesh(xdtdata, cmd[0], cmd[1])
+            elif cmd_lower.startswith('ms-info '): print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('ms-info ',''))])
+            elif cmd_lower.startswith('ms-npc '): cmd = cmd.replace('ms-npc ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHNPCID']"; shortcut(2, cmd, to_exec)
+            elif cmd_lower.startswith('ms-string '): cmd = cmd.replace('ms-string ',''); to_exec = "xdtdata['m_pMissionTable']['m_pMissionStringData'][index]"; shortcut(1, cmd, to_exec)
+            elif cmd_lower.startswith('ms-task '): cmd = cmd.replace('ms-task ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHTaskID']"; shortcut(2, cmd, to_exec)
+            elif cmd_lower.startswith('ms-tasknext '): cmd = cmd.replace('ms-tasknext ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iSUOutgoingTask']"; shortcut(2, cmd, to_exec)
+            elif cmd_lower.startswith('mesh '): cmd = cmd.replace('mesh ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMMeshModelString']"; shortcut(2, cmd, to_exec)
+            elif cmd_lower.startswith('meshid '): cmd = cmd.replace('meshid ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcData'][index]['m_iMesh']"; shortcut(2, cmd, to_exec)
+            elif cmd_lower.startswith('npc-name '): cmd = cmd.replace('npc-name ',''); to_exec = "xdtdata['m_pNpcTable']['m_pNpcStringData'][index]['m_strName']"; shortcut(1, cmd, to_exec)
+            elif cmd_lower.startswith('objects '): cmd = cmd.replace('objects ','').split(' '); to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"; shortcut(3, cmd, to_exec)
+            elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
+            elif cmd_lower.startswith('timport '): cmd = cmd.replace('timport ','').split(' '); new_texture = tabledata.add_object(28); import_texture(new_texture._contents, cmd[0], cmd[1], f'dxt{cmd[2]}'); tabledata.add2ab(cmd[0], new_texture.path_id)
+            elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
+            elif cmd_lower.startswith('tswap-mass '): cmd = cmd.replace('tswap-mass ','').replace(' ',''); tswap_mass(cmd)
+            else:
+                exec(cmd)
+                print()
+        except: print(clr(err(sys.exc_info()) + '\n', 2))
+
+# extract
 
 '''def two():
     
@@ -226,11 +235,7 @@ def main():
         banner = '\n    ______  _______ __   _ _     _   _______ _______\n    |     \\ |_____| | \\  | |____/    |______ |______\n    |_____/ |     | |  \\_| |    \\_ . |       |      \n                                                    \n    x\n\n        '
         x = clr("by sir.dank | nuclearff.com")
         cls(); print(align(clr_banner(banner).replace('x',x)))
-        print(clr("  > [1] CAB Explorer"))
-        print(clr("  > [2] Fix Bundles"))
-        #print(clr("  > [2] Extract")) ###
-        print(clr("  > [0] Exit"))
-        choice = input(clr("\n  > Choice: "))
+        choice = input(clr("  > [1] CAB Explorer\n  > [2] Fix Bundles\n  > [0] Exit\n\n  > Choice: ") + green)
         if choice == "1": cls(); print(align(clr_banner(banner).replace('x',x))); one()
         elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles(); print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
         #elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); two() ###
