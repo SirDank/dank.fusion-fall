@@ -8,7 +8,7 @@ import pretty_errors
 from dankware import align, clr, cls, magenta, white, green, reset, chdir, err
 
 exec_mode = "script"
-#exec(chdir(exec_mode))
+exec(chdir(exec_mode))
 
 if exec_mode == "script" and not os.path.exists("unitypack"):
 
@@ -18,7 +18,7 @@ if exec_mode == "script" and not os.path.exists("unitypack"):
     print(clr("  > Exiting in 10s...",2))
     time.sleep(10); sys.exit()
 
-os.chdir(os.path.join(os.environ['USERPROFILE'],'Desktop'))
+#os.chdir(os.path.join(os.environ['USERPROFILE'],'Desktop'))
 try: os.mkdir("dank.ff")
 except: pass
 os.chdir("dank.ff")
