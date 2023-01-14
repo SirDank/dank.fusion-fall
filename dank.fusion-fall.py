@@ -4,13 +4,11 @@ import json
 import time
 import shutil
 import requests
-from dankware import align, clr_banner, clr, cls, magenta, white, green, reset, chdir, err
+import pretty_errors
+from dankware import align, clr, cls, magenta, white, green, reset, chdir, err
 
 exec_mode = "script"
-exec(chdir(exec_mode))
-try: os.mkdir("dank.ff")
-except: pass
-os.chdir("dank.ff")
+#exec(chdir(exec_mode))
 
 if exec_mode == "script" and not os.path.exists("unitypack"):
 
@@ -19,6 +17,11 @@ if exec_mode == "script" and not os.path.exists("unitypack"):
     print(clr("  > [NOTE] UnityPackFF is slightly modified for dank.ff",2))
     print(clr("  > Exiting in 10s...",2))
     time.sleep(10); sys.exit()
+
+os.chdir(os.path.join(os.environ['USERPROFILE'],'Desktop'))
+try: os.mkdir("dank.ff")
+except: pass
+os.chdir("dank.ff")
 
 from unitypack.asset import Asset
 
@@ -33,7 +36,7 @@ except:
 
     print(clr("\n  > ERROR: ImageMagick not installed!",2))
 
-    choice = input(clr("  > Download Now? [y/n]: "))
+    choice = input(clr("  > Download Now? [y/n]: ") + magenta)
     if choice.lower() == "y":
     
         print(clr("  > Downloading..."))
@@ -108,7 +111,22 @@ def tswap_mass(dxt_mode):
         try: import_texture(xdtdata, f"tswap_textures/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
         except: print(clr(err(sys.exc_info()), 2))
         
-    print(clr(f"\n  > Imported [{len(textures)}] textures!\n"))
+    print(clr(f"\n  > Mass swapped [{len(textures)}] textures!\n"))
+
+def timport_mass(dxt_mode):
+    
+    try: os.mkdir("timport_textures"); input(clr("  > Created timport_textures folder! Hit [ENTER] after adding your files... "))
+    except: pass
+    
+    textures = os.listdir("timport_textures")
+    for texture in textures:
+        try: 
+            new_texture = tabledata.add_object(28)
+            import_texture(new_texture._contents, f"timport_textures/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
+            tabledata.add2ab(f"timport_textures/{texture}", new_texture.path_id)
+        except: print(clr(err(sys.exc_info()), 2))
+        
+    print(clr(f"\n  > Mass imported [{len(textures)}] textures!\n"))
 
 def shortcut(mode, cmd, to_exec):
 
@@ -167,6 +185,8 @@ def one():
  - texture 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
  - timport texture.png texture 1  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
  - timport texture.png texture 5  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - timport-mass 1  >  mass import_texture (fmt='dxt1')
+ - timport-mass 5  >  mass import_texture (fmt='dxt5')
  - tswap texture.png texture 1  >  import_texture(xdtdata,'texture.png','texture','dxt1')
  - tswap texture.png texture 5  >  import_texture(xdtdata,'texture.png','texture','dxt5')
  - tswap-mass 1  >  mass import_texture (fmt='dxt1')
@@ -207,6 +227,7 @@ def one():
             elif cmd_lower.startswith('objects '): cmd = cmd.replace('objects ','').split(' '); to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"; shortcut(3, cmd, to_exec)
             elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
             elif cmd_lower.startswith('timport '): cmd = cmd.replace('timport ','').split(' '); new_texture = tabledata.add_object(28); import_texture(new_texture._contents, cmd[0], cmd[1], f'dxt{cmd[2]}'); tabledata.add2ab(cmd[0], new_texture.path_id)
+            elif cmd_lower.startswith('timport-mass '): cmd = cmd.replace('timport-mass ','').replace(' ',''); timport_mass(cmd)
             elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
             elif cmd_lower.startswith('tswap-mass '): cmd = cmd.replace('tswap-mass ','').replace(' ',''); tswap_mass(cmd)
             else:
@@ -234,11 +255,11 @@ def main():
     while True:
         banner = '\n    ______  _______ __   _ _     _   _______ _______\n    |     \\ |_____| | \\  | |____/    |______ |______\n    |_____/ |     | |  \\_| |    \\_ . |       |      \n                                                    \n    x\n\n        '
         x = clr("by sir.dank | nuclearff.com")
-        cls(); print(align(clr_banner(banner).replace('x',x)))
+        cls(); print(align(clr(banner,4).replace('x',x)))
         choice = input(clr("  > [1] CAB Explorer\n  > [2] Fix Bundles\n  > [0] Exit\n\n  > Choice: ") + green)
-        if choice == "1": cls(); print(align(clr_banner(banner).replace('x',x))); one()
-        elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); fix_bundles(); print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
-        #elif choice == "2": cls(); print(align(clr_banner(banner).replace('x',x))); two() ###
+        if choice == "1": cls(); print(align(clr(banner,4).replace('x',x))); one()
+        elif choice == "2": cls(); print(align(clr(banner,4).replace('x',x))); fix_bundles(); print(clr("  > Returning to menu in 5 seconds...")); time.sleep(5)
+        #elif choice == "2": cls(); print(align(clr(banner,4).replace('x',x))); two() ###
         elif choice == "0": cls(); sys.exit()
 
 if __name__ == "__main__": log = ""; main()
