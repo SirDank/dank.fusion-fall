@@ -117,13 +117,13 @@ def timport_mass(dxt_mode):
     
     try: os.mkdir("timport_textures"); input(clr("  > Created timport_textures folder! Hit [ENTER] after adding your files... "))
     except: pass
-    
+
     textures = os.listdir("timport_textures")
     for texture in textures:
         try: 
             new_texture = tabledata.add_object(28)
             import_texture(new_texture._contents, f"timport_textures/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
-            tabledata.add2ab(f"timport_textures/{texture}", new_texture.path_id)
+            tabledata.add2ab(f"texture/{texture}.dds", new_texture.path_id)
         except: print(clr(err(sys.exc_info()), 2))
         
     print(clr(f"\n  > Mass imported [{len(textures)}] textures!\n"))
@@ -183,8 +183,8 @@ def one():
  - objects 1 1000  >  for _ in range(1,1000): print(f'{_} - {tabledata.objects[_].contents}')
  - texture 344  >  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
  - texture 344 fusion_cheese  >  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
- - timport texture.png texture 1  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
- - timport texture.png texture 5  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - timport texture 1  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - timport texture 5  >  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
  - timport-mass 1  >  mass import_texture (fmt='dxt1')
  - timport-mass 5  >  mass import_texture (fmt='dxt5')
  - tswap texture.png texture 1  >  import_texture(xdtdata,'texture.png','texture','dxt1')
@@ -193,16 +193,17 @@ def one():
  - tswap-mass 5  >  mass import_texture (fmt='dxt5')\n"""))
             
             elif cmd_lower == "exit": break
+            elif cmd_lower == "fix-bundles": fix_bundles()
+            elif cmd_lower == "log": open("log.txt","w+").write(log)
             elif cmd_lower == "dump-xdt": 
                 try: dump_xdt()
                 except: print(clr(err(sys.exc_info()), 2))
-            elif cmd_lower == "fix-bundles": fix_bundles()
-            elif cmd_lower == "log": open("log.txt","w+").write(log)
             elif cmd_lower == "save":
                 try: os.remove(cab_name)
                 except: pass
                 try: tabledata.save(open(cab_name,'wb'))
                 except: print(clr(err(sys.exc_info()), 2))
+
             elif cmd_lower == "save-all":
                 try: dump_xdt()
                 except: print(clr(err(sys.exc_info()), 2)); continue
@@ -212,27 +213,93 @@ def one():
                 try: tabledata.save(open(cab_name,'wb'))
                 except: print(clr(err(sys.exc_info()), 2)) 
 
-            elif cmd_lower.startswith('aimport '): cmd = cmd.replace('aimport ','').split(' '); new_audio = tabledata.add_object(83); import_audio(new_audio.contents,cmd[0],int(cmd[1]),cmd[2]); tabledata.add2ab(cmd[0],new_audio.path_id)
-            elif cmd_lower.startswith('aswap '): cmd = cmd.replace('aswap ','').split(' '); import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
-            elif cmd_lower.startswith('export '): cmd = cmd.replace('export ','').replace(' ',''); open(cmd,'w').write(OBJMesh(xdtdata).export())
-            elif cmd_lower.startswith('imesh '): cmd = cmd.replace('imesh ','').split(' '); import_mesh(xdtdata, cmd[0], cmd[1])
-            elif cmd_lower.startswith('ms-info '): print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('ms-info ',''))])
-            elif cmd_lower.startswith('ms-npc '): cmd = cmd.replace('ms-npc ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHNPCID']"; shortcut(2, cmd, to_exec)
-            elif cmd_lower.startswith('ms-string '): cmd = cmd.replace('ms-string ',''); to_exec = "xdtdata['m_pMissionTable']['m_pMissionStringData'][index]"; shortcut(1, cmd, to_exec)
-            elif cmd_lower.startswith('ms-task '): cmd = cmd.replace('ms-task ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHTaskID']"; shortcut(2, cmd, to_exec)
-            elif cmd_lower.startswith('ms-tasknext '): cmd = cmd.replace('ms-tasknext ','').split(' '); to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iSUOutgoingTask']"; shortcut(2, cmd, to_exec)
-            elif cmd_lower.startswith('mesh '): cmd = cmd.replace('mesh ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMMeshModelString']"; shortcut(2, cmd, to_exec)
-            elif cmd_lower.startswith('meshid '): cmd = cmd.replace('meshid ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcData'][index]['m_iMesh']"; shortcut(2, cmd, to_exec)
-            elif cmd_lower.startswith('npc-name '): cmd = cmd.replace('npc-name ',''); to_exec = "xdtdata['m_pNpcTable']['m_pNpcStringData'][index]['m_strName']"; shortcut(1, cmd, to_exec)
-            elif cmd_lower.startswith('objects '): cmd = cmd.replace('objects ','').split(' '); to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"; shortcut(3, cmd, to_exec)
-            elif cmd_lower.startswith('texture '): cmd = cmd.replace('texture ','').split(' '); to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"; shortcut(2, cmd, to_exec)
-            elif cmd_lower.startswith('timport '): cmd = cmd.replace('timport ','').split(' '); new_texture = tabledata.add_object(28); import_texture(new_texture._contents, cmd[0], cmd[1], f'dxt{cmd[2]}'); tabledata.add2ab(cmd[0], new_texture.path_id)
-            elif cmd_lower.startswith('timport-mass '): cmd = cmd.replace('timport-mass ','').replace(' ',''); timport_mass(cmd)
-            elif cmd_lower.startswith('tswap '): cmd = cmd.replace('tswap ','').split(' '); import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
-            elif cmd_lower.startswith('tswap-mass '): cmd = cmd.replace('tswap-mass ','').replace(' ',''); tswap_mass(cmd)
+            elif cmd_lower.startswith('aimport '):
+                cmd = cmd.replace('aimport ','').split(' ')
+                new_audio = tabledata.add_object(83)
+                import_audio(new_audio.contents,cmd[0],int(cmd[1]),cmd[2])
+                tabledata.add2ab(cmd[0],new_audio.path_id)
+
+            elif cmd_lower.startswith('aswap '):
+                cmd = cmd.replace('aswap ','').split(' ')
+                import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
+
+            elif cmd_lower.startswith('export '):
+                cmd = cmd.replace('export ','').replace(' ','')
+                open(cmd,'w').write(OBJMesh(xdtdata).export())
+
+            elif cmd_lower.startswith('imesh '):
+                cmd = cmd.replace('imesh ','').split(' ')
+                import_mesh(xdtdata, cmd[0], cmd[1])
+
+            elif cmd_lower.startswith('ms-info '):
+                print(xdtdata['m_pMissionTable']['m_pMissionData'][int(cmd.replace('ms-info ',''))])
+
+            elif cmd_lower.startswith('ms-npc '):
+                cmd = cmd.replace('ms-npc ','').split(' ')
+                to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHNPCID']"
+                shortcut(2, cmd, to_exec)
+
+            elif cmd_lower.startswith('ms-string '):
+                cmd = cmd.replace('ms-string ','')
+                to_exec = "xdtdata['m_pMissionTable']['m_pMissionStringData'][index]"
+                shortcut(1, cmd, to_exec)
+
+            elif cmd_lower.startswith('ms-task '):
+                cmd = cmd.replace('ms-task ','').split(' ')
+                to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iHTaskID']"
+                shortcut(2, cmd, to_exec)
+
+            elif cmd_lower.startswith('ms-tasknext '):
+                cmd = cmd.replace('ms-tasknext ','').split(' ')
+                to_exec = "xdtdata['m_pMissionTable']['m_pMissionData'][index]['m_iSUOutgoingTask']"
+                shortcut(2, cmd, to_exec)
+
+            elif cmd_lower.startswith('mesh '):
+                cmd = cmd.replace('mesh ','').split(' ')
+                to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMMeshModelString']"
+                shortcut(2, cmd, to_exec)
+
+            elif cmd_lower.startswith('meshid '):
+                cmd = cmd.replace('meshid ','').split(' ')
+                to_exec = "xdtdata['m_pNpcTable']['m_pNpcData'][index]['m_iMesh']"
+                shortcut(2, cmd, to_exec)
+
+            elif cmd_lower.startswith('npc-name '):
+                cmd = cmd.replace('npc-name ','')
+                to_exec = "xdtdata['m_pNpcTable']['m_pNpcStringData'][index]['m_strName']"
+                shortcut(1, cmd, to_exec)
+
+            elif cmd_lower.startswith('objects '):
+                cmd = cmd.replace('objects ','').split(' ')
+                to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"
+                shortcut(3, cmd, to_exec)
+
+            elif cmd_lower.startswith('texture '):
+                cmd = cmd.replace('texture ','').split(' ')
+                to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][index]['m_pstrMTextureString']"
+                shortcut(2, cmd, to_exec)
+
+            elif cmd_lower.startswith('timport '):
+                cmd = cmd.replace('timport ','').split(' ')
+                new_texture = tabledata.add_object(28)
+                import_texture(new_texture._contents, f'{cmd[0]}.png', cmd[0], f'dxt{cmd[1]}')
+                tabledata.add2ab(f"texture/{cmd[0]}.dds", new_texture.path_id)
+
+            elif cmd_lower.startswith('timport-mass '):
+                cmd = cmd.replace('timport-mass ','').replace(' ','')
+                timport_mass(cmd)
+
+            elif cmd_lower.startswith('tswap '):
+                cmd = cmd.replace('tswap ','').split(' ')
+                import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
+
+            elif cmd_lower.startswith('tswap-mass '):
+                cmd = cmd.replace('tswap-mass ','').replace(' ','')
+                tswap_mass(cmd)
+
             else:
-                exec(cmd)
-                print()
+                exec(cmd); print()
+
         except: print(clr(err(sys.exc_info()) + '\n', 2))
 
 # extract
