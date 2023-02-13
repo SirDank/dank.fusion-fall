@@ -140,6 +140,69 @@ def shortcut(mode, cmd, to_exec):
         exec(to_exec)
     print()
 
+def add_npc():
+    
+    tmp = str(xdtdata['m_pNpcTable']['m_pNpcData'][-1])
+    
+    if "m_iNpcNumber" not in tmp:
+        print(clr('\n  > Could not find "m_iNpcNumber" in str(xdtdata["m_pNpcTable"]["m_pNpcData"][-1])',2))
+        return
+    
+    new_npc_num = int(tmp.split("'m_iNpcNumber', ")[1].split(')')[0]) + 1
+    
+    data = FFOrderedDict()
+    print(clr(f"  > data['m_iNpcNumber'] = {new_npc_num}"))
+    data['m_iNpcNumber'] = new_npc_num
+    print(clr(f"  > data['m_iNpcName'] = {new_npc_num}"))
+    data['m_iNpcName'] = new_npc_num
+    print(clr(f"  > data['m_iComment'] = {new_npc_num}"))
+    data['m_iComment'] = new_npc_num
+    
+    new_mesh_num = int(tmp.split("'m_iMesh', ")[1].split(')')[0]) + 1
+    print(clr(f"  > data['m_iMesh'] = {new_mesh_num}"))
+    data['m_iMesh'] = new_mesh_num
+    
+    counter = -1
+    while True:
+        last_barker_num = int(str(xdtdata['m_pNpcTable']['m_pNpcData'][counter]).split("'m_iBarkerNumber', ")[1].split(')')[0])
+        if last_barker_num != 0: break
+        counter -= 1
+
+    print(clr(f"  > data['m_iBarkerNumber'] = {last_barker_num + 1}"))
+    data['m_iBarkerNumber'] = last_barker_num + 1
+    
+    for index in ['m_iDifficulty', 'm_iTeam', 'm_iNpcLevel', 'm_iNpcType', 'm_iHNpc', 'm_iHNpcNum', 'm_iNpcStyle', 'm_iAiType', 'm_iHP', 'm_iHPRegen', 'm_iDropType', 'm_iRegenTime', 'm_iHeight', 'm_iRadius', 'm_fScale', 'm_iPower', 'm_iAccuracy', 'm_iProtection', 'm_iDodge', 'm_iRunSpeed', 'm_iSwimSpeed', 'm_iJumpHeight', 'm_iJumpDistance', 'm_iSightRange', 'm_iIdleRange', 'm_iCombatRange', 'm_iAtkRange', 'm_iAtkAngle', 'm_iAtkRate', 'm_iEffectArea', 'm_iTargetMode', 'm_iTargetNumber', 'm_iInitalTime', 'm_iDeliverTime', 'm_iDelayTime', 'm_iDurationTime', 'm_iMegaType', 'm_iMegaTypeProb', 'm_iCorruptionType', 'm_iCorruptionTypeProb', 'm_iActiveSkill1', 'm_iActiveSkill1Prob', 'm_iActiveSkill2', 'm_iActiveSkill2Prob', 'm_iActiveSkill3', 'm_iActiveSkill3Prob', 'm_iSupportSkill', 'm_iPassiveBuff', 'm_iNeck', 'm_iTexture', 'm_iTexture2', 'm_iIcon1', 'm_iEffect', 'm_iSound', 'm_fAnimationSpeed', 'm_iWalkSpeed', 'm_fWalkAnimationSpeed', 'm_fRunAnimationSpeed', 'm_iMapIcon', 'm_iLegStyle', 'm_iBarkerType', 'm_iMegaAni', 'm_iActiveSkill1Ani', 'm_iActiveSkill2Ani', 'm_iSupportSkillAni', 'm_iMegaString', 'm_iCorruptionString', 'm_iActiveSkill1String', 'm_iActiveSkill2String', 'm_iSupportSkillString', 'm_iServiceNumber']:
+        data[index] = int(input(clr(f"  > data['{index}'] (int) = ") + green))
+
+    print(clr("  > xdtdata['m_pNpcTable']['m_pNpcData'].append(data)"))
+    xdtdata['m_pNpcTable']['m_pNpcData'].append(data)
+
+    #data = FFOrderedDict()
+    #for index in ['m_iIconNumber', 'm_iIconType']:
+    #    data[index] = int(input(clr(f"  > data['{index}'] (int) = ") + green))
+    #print(clr("  > xdtdata['m_pNpcTable']['m_pNpcIconData'].append(data)"))
+    #xdtdata['m_pNpcTable']['m_pNpcIconData'].append(data)
+    
+    data = FFOrderedDict()
+    for index in ['m_pstrMMeshModelString', 'm_pstrMTextureString', 'm_pstrMTextureString2', 'm_pstrFTextureString', 'm_pstrFTextureString2', 'm_pstrFMeshModelString']:
+        data[index] = input(clr(f"  > data['{index}'] (string) = ") + green)
+    print(clr("  > xdtdata['m_pNpcTable']['m_pNpcMeshData'].append(data)"))
+    xdtdata['m_pNpcTable']['m_pNpcMeshData'].append(data)
+
+    data = FFOrderedDict()
+    for index in ['m_strName', 'm_strComment', 'm_strComment1', 'm_strComment2']:
+        data[index] = input(clr(f"  > data['{index}'] (string) = ") + green)
+    data['m_iExtraNumber'] = int(input(clr(f"  > data['m_iExtraNumber'] (int) = ") + green))
+    print(clr("  > xdtdata['m_pNpcTable']['m_pNpcBarkerData'].append(data)"))
+    xdtdata['m_pNpcTable']['m_pNpcBarkerData'].append(data)
+    
+    data = FFOrderedDict()
+    for index in ['m_strName', 'm_strComment', 'm_strComment1', 'm_strComment2']:
+        data[index] = input(clr(f"  > data['{index}'] (string) = ") + green)
+    data['m_iExtraNumber'] = int(input(clr(f"  > data['m_iExtraNumber'] (int) = ") + green))
+    print(clr("  > xdtdata['m_pNpcTable']['m_pNpcStringData'].append(data)"))
+    xdtdata['m_pNpcTable']['m_pNpcStringData'].append(data)
+
 # main
 
 def one():
@@ -153,7 +216,7 @@ def one():
     tabledata = Asset.from_file(open(cab_path, 'rb'))
     print(clr(logger(f"  > xdtdata = tabledata.objects[{index}].contents")))
     xdtdata = tabledata.objects[index].contents
-    print(clr("\n  > Pre-defined commands: dump-xdt, path_id('filename'), fix-bundles, help, log, save, save-all, exit\n"))
+    print(clr("\n  > Pre-defined commands: dump-xdt, path_id('filename'), fix-bundles, add-npc, help, log, save, save-all, exit\n"))
 
     while True:
         try:
@@ -194,6 +257,7 @@ def one():
             
             elif cmd_lower == "exit": break
             elif cmd_lower == "fix-bundles": fix_bundles()
+            elif cmd_lower == "add-npc": add_npc()
             elif cmd_lower == "log": open("log.txt","w+").write(log)
             elif cmd_lower == "dump-xdt": 
                 try: dump_xdt()
