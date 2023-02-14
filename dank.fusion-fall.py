@@ -7,25 +7,32 @@ import requests
 import pretty_errors
 from dankware import align, clr, cls, magenta, white, green, reset, chdir, err
 
+try:
+    from wand.image import Image
+    from unitypackff.asset import Asset
+    from unitypackff.export import OBJMesh
+    from unitypackff.object import FFOrderedDict, ObjectPointer
+    from unitypackff.modding import import_texture, import_mesh, import_audio
+except:
+    print(clr("\n  > Is ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe installed?",2)); time.sleep(10); sys.exit()
+
 exec_mode = "script"
 exec(chdir(exec_mode))
 
-if exec_mode == "script" and not os.path.exists("unitypack"):
+'''if exec_mode == "script" and not os.path.exists("unitypack"):
 
     print(clr("\n  > ERROR: unitypack folder missing!",2))
     print(clr("  > Download it from: https://github.com/dongresource/UnityPackFF",2))
     print(clr("  > [NOTE] UnityPackFF is slightly modified for dank.ff",2))
     print(clr("  > Exiting in 10s...",2))
-    time.sleep(10); sys.exit()
+    time.sleep(10); sys.exit()'''
 
 #os.chdir(os.path.join(os.environ['USERPROFILE'],'Desktop'))
 try: os.mkdir("dank.ff")
 except: pass
 os.chdir("dank.ff")
 
-from unitypack.asset import Asset
-
-try:
+'''try:
 
     from wand.image import Image
     from unitypack.modding import import_texture, import_mesh, import_audio
@@ -49,7 +56,7 @@ except:
     input(clr("  > Hit [ENTER] after installing... "))
     from unitypack.modding import import_texture, import_mesh, import_audio
     from unitypack.object import FFOrderedDict, ObjectPointer
-    from unitypack.export import OBJMesh
+    from unitypack.export import OBJMesh'''
 
 # Dependencies for ffextract.py
 
