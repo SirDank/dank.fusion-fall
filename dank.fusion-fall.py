@@ -7,14 +7,14 @@ import requests
 import pretty_errors
 from dankware import align, clr, cls, magenta, white, green, reset, chdir, err
 
-try:
-    from wand.image import Image
-    from unitypackff.asset import Asset
-    from unitypackff.export import OBJMesh
-    from unitypackff.object import FFOrderedDict, ObjectPointer
-    from unitypackff.modding import import_texture, import_mesh, import_audio
-except:
-    print(clr("\n  > Is ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe installed?",2)); time.sleep(10); sys.exit()
+#try:
+from wand.image import Image
+from unitypackff.asset import Asset
+from unitypackff.export import OBJMesh
+from unitypackff.object import FFOrderedDict, ObjectPointer
+from unitypackff.modding import import_texture, import_mesh, import_audio
+#except:
+#    print(clr("\n  > Is ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe installed?",2)); time.sleep(10); sys.exit()
 
 exec_mode = "script"
 exec(chdir(exec_mode))
