@@ -245,8 +245,8 @@ def one():
             if cmd_lower == "help":
 
                 print(clr("""  > Available Shortcuts With Examples:\n
- - aimport sound.wav 22.5 sound  >  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
- - aswap sound.wav 22.5 sound  >  import_audio(xdtdata,'sound.wav',22.5,'sound')
+ - aimport sound.wav, 22.5, sound  >  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
+ - aswap sound.wav, 22.5, sound  >  import_audio(xdtdata,'sound.wav',22.5,'sound')
  - export example.obj  >  open('example.obj','w').write(OBJMesh(xdtdata).export())
  - imesh npc_alienx.obj npc_alienx  >  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
  - ms-info  >  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
@@ -299,13 +299,13 @@ def one():
                 except: print(clr(err(sys.exc_info()), 2)) 
 
             elif cmd_lower.startswith('aimport '):
-                cmd = cmd.replace('aimport ','').split(' ')
+                cmd = cmd.replace('aimport ','').split(', ')
                 new_audio = tabledata.add_object(83)
                 import_audio(new_audio.contents,cmd[0],int(cmd[1]),cmd[2])
                 tabledata.add2ab(cmd[0],new_audio.path_id)
 
             elif cmd_lower.startswith('aswap '):
-                cmd = cmd.replace('aswap ','').split(' ')
+                cmd = cmd.replace('aswap ','').split(', ')
                 import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
 
             elif cmd_lower.startswith('export '):
