@@ -178,7 +178,12 @@ def add_npc():
     print(clr(f"  > data['m_iBarkerNumber'] = {last_barker_num + 1}"))
     data['m_iBarkerNumber'] = last_barker_num + 1
     
-    for index in ['m_iDifficulty', 'm_iTeam', 'm_iNpcLevel', 'm_iNpcType', 'm_iHNpc', 'm_iHNpcNum', 'm_iNpcStyle', 'm_iAiType', 'm_iHP', 'm_iHPRegen', 'm_iDropType', 'm_iRegenTime', 'm_iHeight', 'm_iRadius', 'm_fScale', 'm_iPower', 'm_iAccuracy', 'm_iProtection', 'm_iDodge', 'm_iRunSpeed', 'm_iSwimSpeed', 'm_iJumpHeight', 'm_iJumpDistance', 'm_iSightRange', 'm_iIdleRange', 'm_iCombatRange', 'm_iAtkRange', 'm_iAtkAngle', 'm_iAtkRate', 'm_iEffectArea', 'm_iTargetMode', 'm_iTargetNumber', 'm_iInitalTime', 'm_iDeliverTime', 'm_iDelayTime', 'm_iDurationTime', 'm_iMegaType', 'm_iMegaTypeProb', 'm_iCorruptionType', 'm_iCorruptionTypeProb', 'm_iActiveSkill1', 'm_iActiveSkill1Prob', 'm_iActiveSkill2', 'm_iActiveSkill2Prob', 'm_iActiveSkill3', 'm_iActiveSkill3Prob', 'm_iSupportSkill', 'm_iPassiveBuff', 'm_iNeck', 'm_iTexture', 'm_iTexture2', 'm_iIcon1', 'm_iEffect', 'm_iSound', 'm_fAnimationSpeed', 'm_iWalkSpeed', 'm_fWalkAnimationSpeed', 'm_fRunAnimationSpeed', 'm_iMapIcon', 'm_iLegStyle', 'm_iBarkerType', 'm_iMegaAni', 'm_iActiveSkill1Ani', 'm_iActiveSkill2Ani', 'm_iSupportSkillAni', 'm_iMegaString', 'm_iCorruptionString', 'm_iActiveSkill1String', 'm_iActiveSkill2String', 'm_iSupportSkillString', 'm_iServiceNumber']:
+    for index in ['m_iDifficulty', 'm_iTeam', 'm_iNpcLevel', 'm_iNpcType', 'm_iHNpc', 'm_iHNpcNum', 'm_iNpcStyle', 'm_iAiType', 'm_iHP', 'm_iHPRegen', 'm_iDropType', 'm_iRegenTime', 'm_iHeight', 'm_iRadius', 'm_fScale', 'm_iPower', 'm_iAccuracy', 'm_iProtection', 'm_iDodge', 'm_iRunSpeed', 'm_iSwimSpeed', 'm_iJumpHeight', 'm_iJumpDistance', 'm_iSightRange', 'm_iIdleRange', 'm_iCombatRange', 'm_iAtkRange', 'm_iAtkAngle', 'm_iAtkRate', 'm_iEffectArea', 'm_iTargetMode', 'm_iTargetNumber', 'm_iInitalTime', 'm_iDeliverTime', 'm_iDelayTime', 'm_iDurationTime', 'm_iMegaType', 'm_iMegaTypeProb', 'm_iCorruptionType', 'm_iCorruptionTypeProb', 'm_iActiveSkill1', 'm_iActiveSkill1Prob', 'm_iActiveSkill2', 'm_iActiveSkill2Prob', 'm_iActiveSkill3', 'm_iActiveSkill3Prob', 'm_iSupportSkill', 'm_iPassiveBuff', 'm_iNeck', 'm_iTexture', 'm_iTexture2', 'm_iIcon1', 'm_iEffect', 'm_iSound', 'm_iWalkSpeed', 'm_iMapIcon', 'm_iLegStyle', 'm_iBarkerType', 'm_iMegaAni', 'm_iActiveSkill1Ani', 'm_iActiveSkill2Ani', 'm_iSupportSkillAni', 'm_iMegaString', 'm_iCorruptionString', 'm_iActiveSkill1String', 'm_iActiveSkill2String', 'm_iSupportSkillString', 'm_iServiceNumber']:
+        while True:
+            try: data[index] = int(input(clr(f"  > data['{index}'] (int) = ") + green)); break
+            except: pass
+            
+    for index in ['m_fAnimationSpeed', 'm_fWalkAnimationSpeed', 'm_fRunAnimationSpeed']:
         while True:
             try: data[index] = float(input(clr(f"  > data['{index}'] (float) = ") + green)); break
             except: pass
@@ -189,7 +194,7 @@ def add_npc():
     #data = FFOrderedDict()
     #for index in ['m_iIconNumber', 'm_iIconType']:
     #    while True:
-    #        try: data[index] = float(input(clr(f"  > data['{index}'] (float) = ") + green)); break
+    #        try: data[index] = int(input(clr(f"  > data['{index}'] (int) = ") + green)); break
     #        except: pass
     #print(clr("  > xdtdata['m_pNpcTable']['m_pNpcIconData'].append(data)"))
     #xdtdata['m_pNpcTable']['m_pNpcIconData'].append(data)
