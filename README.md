@@ -37,7 +37,7 @@
 
 # 🚨 Stats 🚨
 
-<br><p align="center"><img width="800" alt="image" src="https://repobeats.axiom.co/api/embed/42c9b248a6c2f5a3c5709d6a205b8c3735486a9b.svg"></p><br>
+<br><p align="center"><img width="800" alt="image" src="https://repobeats.axiom.co/api/embed/5fe6c5da1c1cb9660f24bb76f7b2addc978b37cd.svg"></p><br>
 
 # 🚨 Star History 🚨
 
