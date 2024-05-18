@@ -5,10 +5,20 @@ import time
 import shutil
 import requests
 import pretty_errors
-from dankware import align, clr, cls, err, rm_line, file_selector, title, get_path
+from dankware.tkinter import file_selector
+from dankware import align, clr, cls, err, rm_line, title, get_path
 from dankware import white, white_normal, red, red_normal, red_dim, green, reset, Style
 
 title("𝚍𝚊𝚗𝚔.𝚏𝚞𝚜𝚒𝚘𝚗-𝚏𝚊𝚕𝚕")
+
+def change_dir():
+
+    os.chdir(os.path.dirname(__file__))
+    if os.path.basename(os.getcwd()) == "dank.fusion-fall.dist":
+        os.chdir("..")
+    if not os.path.isdir("dank.fusion-fall"):
+        os.mkdir("dank.fusion-fall")
+    os.chdir("dank.fusion-fall")
 
 def setup():
     
@@ -27,35 +37,37 @@ def setup():
                 try:
 
                     file_name = "ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe"
-                    download_path = os.path.join(os.environ['USERPROFILE'], 'Downloads')
-                    if not os.path.exists(download_path):
-                        download_path = os.path.join(os.environ['USERPROFILE'], 'Desktop')
-                        if not os.path.exists(download_path):
-                            download_path = "C:\\"
-                    download_path = os.path.join(download_path, file_name)
-                    
                     print(clr(f"\n  - Downloading [ {file_name} ]..."))
                     response = requests.get(f"https://github.com/SirDank/dank.fusion-fall/raw/main/__assets__/{file_name}", headers={'user-agent':'dank.fusion-fall'}, allow_redirects=True)
                     data = response.content
                     try: size = '{:.3}'.format(int(response.headers['Content-Length'])/1024000)
                     except: size = "?"
-                    open(download_path,"wb").write(data)
-                    print(clr(f"\n  - Downloaded [ {file_name} ] [ {size} MB ]")); break
+                    open(file_name,"wb").write(data)
+                    print(clr(f"\n  - Downloaded [ {file_name} ] [ {size} MB ]"))
+                    break
 
                 except: input(clr(f"\n  > Failed [ {file_name} ] Press {white}ENTER{red} to try again... ",2))
-            
+
             print(clr("\n  - Launching ImageMagick Installer..."))
-            os.system(f'"{download_path}"')
+            os.system(file_name)
             input(clr("\n  > Press [ENTER] after you have installed ImageMagick... "))
             magickwand_installed = True
 
+change_dir()
 setup()
 
 if magickwand_installed:
     
     # there is a reason this is being written like this!
     try: from wand.image import Image; from unitypackff.asset import Asset; from unitypackff.export import OBJMesh; from unitypackff.object import FFOrderedDict, ObjectPointer; from unitypackff.modding import import_texture, import_mesh, import_audio
-    except: setup()    
+    except:
+        print(clr("\n  - Failed to import required packages! Exiting...",2))
+        time.sleep(3)
+        sys.exit(0)
+else:
+    print(clr("\n  - ImageMagick is required to run this tool! Exiting...",2))
+    time.sleep(3)
+    sys.exit(0)
 
 def banner():
     
@@ -64,16 +76,7 @@ def banner():
     cls(); print(align(clr(banner,4,colours=[white, white_normal, red, red_normal, red_dim]).replace('x',x)))
 
 def open_workspace():
-    
-    dankff_path = get_path('Documents')
-    if not os.path.exists(dankff_path):
-        dankff_path = get_path('Desktop')
-        if not os.path.exists(dankff_path):
-            dankff_path = "C:\\"
-    dankff_path = os.path.join(dankff_path, "dank.fusion-fall")
-    if not os.path.exists(dankff_path): os.makedirs(dankff_path)
-    os.chdir(dankff_path)
-    
+
     banner()
     
     folders = [_ for _ in os.listdir() if os.path.isdir(_)]
