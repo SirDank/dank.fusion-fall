@@ -6,7 +6,7 @@ import shutil
 import requests
 import pretty_errors
 from dankware.tkinter import file_selector
-from dankware import align, clr, cls, err, rm_line, title, get_path
+from dankware import align, clr, cls, err, rm_line, title
 from dankware import white, white_normal, red, red_normal, red_dim, green, reset, Style
 
 title("𝚍𝚊𝚗𝚔.𝚏𝚞𝚜𝚒𝚘𝚗-𝚏𝚊𝚕𝚕")
@@ -170,28 +170,28 @@ def fix_bundles():
 
     shutil.rmtree("bundles_to_fix"); print(clr(f"\n  - Fixed [{len(bundles)}] bundles!\n"))
 
-def tswap_mass(dxt_mode):
+def texture_swap_mass(dxt_mode):
 
-    try: os.mkdir("tswap_textures"); input(clr("  > Created tswap_textures folder! Hit [ENTER] after adding your files... "))
+    try: os.mkdir("texture_swap"); input(clr("  > Created texture_swap folder! Hit [ENTER] after adding your files... "))
     except: pass
 
-    textures = os.listdir("tswap_textures")
+    textures = os.listdir("texture_swap")
     for texture in textures:
-        try: import_texture(xdtdata, f"tswap_textures/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
+        try: import_texture(xdtdata, f"texture_swap/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
         except: print(clr(err(sys.exc_info()), 2))
         
     print(clr(f"\n  - Mass swapped [{len(textures)}] textures!\n"))
 
-def timport_mass(dxt_mode):
+def texture_import_mass(dxt_mode):
     
-    try: os.mkdir("timport_textures"); input(clr("  > Created timport_textures folder! Hit [ENTER] after adding your files... "))
+    try: os.mkdir("texture_import"); input(clr("  > Created texture_import folder! Hit [ENTER] after adding files... "))
     except: pass
 
-    textures = os.listdir("timport_textures")
+    textures = os.listdir("texture_import")
     for texture in textures:
         try: 
             new_texture = tabledata.add_object(28)
-            import_texture(new_texture._contents, f"timport_textures/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
+            import_texture(new_texture._contents, f"texture_import/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
             tabledata.add2ab(f"texture/{texture}.dds", new_texture.path_id)
         except: print(clr(err(sys.exc_info()), 2))
         
@@ -206,6 +206,328 @@ def shortcut(mode, cmd, to_exec):
         if len(cmd) == 1: exec(f"print({to_exec})".replace('key', cmd[0]))
         else: exec(to_exec.replace('key',cmd[0]) + f" = \"{cmd[1]}\"")
     print()
+
+def add_mission():
+
+    mission_id = int(sorted([_['m_iHMissionID'] for _ in xdtdata['m_pMissionTable']['m_pMissionData']])[-1]) + 1
+    print(clr(f"  - New Mission ID: {green}{mission_id}"))
+    multiplier = mission_id - 919
+
+    min_required_lvl = max(int(input(clr("  > Minimum Required Level (int): ") + green)), 0)
+    required_missions = input(clr("  > Required Mission (int,int): ") + green).split(',',1)
+    quest_giver_npc = int(input(clr("  > Quest Giver NPC ID (int): ") + green))
+    quest_npc = int(input(clr("  > Quest NPC ID (int): ") + green))
+    enemy_id = int(input(clr("  > Enemy ID (int): ") + green))
+    quest_item = input(clr("  > Quest Item (str): ") + green)
+    reward_item_type = input(clr("  > Reward Item Type (int,int,int,int): ") + green).split(',',3)
+    reward_item_id = input(clr("  > Reward Item ID (int,int,int,int): ") + green).split(',',3)
+
+    if len(reward_item_type) != 4:
+        print(clr("  - Reward Item Type must be 4 integers separated by 3 commas!", 2))
+        return
+    if len(reward_item_id) != 4:
+        print(clr("  - Reward Item ID must be 4 integers separated by 3 commas!", 2))
+        return
+    if len(required_missions) != 2:
+        print(clr("  - Required Mission must be 2 integers separated by 1 comma!", 2))
+        return
+
+    for _ in range(4):
+        if not reward_item_type[_].isdigit() or not reward_item_id[_].isdigit():
+            print(clr("  - Reward Item Type and ID must be integers!", 2))
+            return
+        reward_item_type[_] = int(reward_item_type[_])
+        reward_item_id[_] = int(reward_item_id[_])
+
+    for _ in range(2):
+        if not required_missions[_].isdigit():
+            print(clr("  - Required Mission must be integers!", 2))
+            return
+        required_missions[_] = int(required_missions[_])
+
+    data = FFOrderedDict()
+    data['m_iHMissionType'] = 3
+    data['m_iHMissionID'] = mission_id
+    data['m_iHMissionName'] = 16038 + (16*multiplier)
+    data['m_iHTaskType'] = 1
+    data['m_iHTaskID'] = 5249 + (3*multiplier)
+    data['m_iHNPCID'] = quest_giver_npc
+    data['m_iHJournalNPCID'] = quest_giver_npc
+    data['m_iHTerminatorNPCID'] = quest_npc
+    data['m_iHDifficultyType'] = 2
+    data['m_iHBarkerTextID'] = [0, 0, 0, 0]
+    data['m_iHCurrentObjective'] = 16039 + (16*multiplier)
+    data['m_iRequireInstanceID'] = 0
+    data['m_iRepeatflag'] = 0
+    data['m_iKorStReqLvlMin'] = 0
+    data['m_iCTRReqLvMin'] = min_required_lvl
+    data['m_iCTRReqLvMax'] = 0
+    data['m_iCSTRReqNano'] = [0, 0, 0, 0, 0]
+    data['m_iCSTReqGuide'] = 0
+    data['m_iCSTReqMission'] = required_missions
+    data['m_iCSTEntranceGroupMin'] = 0
+    data['m_iCSTEntranceGroupMax'] = 0
+    data['m_iCSTItemID'] = [0, 0, 0]
+    data['m_iCSTItemNumNeeded'] = [0, 0, 0]
+    data['m_iCSTTrigger'] = 0
+    data['m_iCSUCheckTimer'] = 0
+    data['m_iCSUEnemyID'] = [0, 0, 0]
+    data['m_iCSUNumToKill'] = [0, 0, 0]
+    data['m_iCSUItemID'] = [0, 0, 0]
+    data['m_iCSUItemNumNeeded'] = [0, 0, 0]
+    data['m_iCSUDEFNPCID'] = 0
+    data['m_iCSUDEFNPCAI'] = 0
+    data['m_iCSUDEPNPCFollow'] = 0
+    data['m_iSTGrantTimer'] = 0
+    data['m_iSTItemID'] = [0, 0, 0]
+    data['m_iSTItemNumNeeded'] = [0, 0, 0]
+    data['m_iSTItemDropRate'] = [0, 0, 0]
+    data['m_iSTGrantWayPoint'] = quest_npc
+    data['m_iSTSpawnMonsterID'] = 0
+    data['m_iSTSpwanLocation'] = 0
+    data['m_iSTMessageType'] = 0
+    data['m_iSTMessageTextID'] = 0
+    data['m_iSTMessageSendNPC'] = 0
+    data['m_iSTDialogBubble'] = 16040 + (16*multiplier)
+    data['m_iSTDialogBubbleNPCID'] = quest_giver_npc
+    data['m_iSTJournalIDAdd'] = 2988 + (3*multiplier)
+    data['m_pstrSTScript'] = ''
+    data['m_iSTNanoID'] = 0
+    data['m_iKorSuccRewardID'] = 0
+    data['m_iSUReward'] = 0
+    data['m_iSUOutgoingMission'] = 0
+    data['m_iSUOutgoingTask'] = 5250 + (3*multiplier)
+    data['m_iSUItem'] = [0, 0, 0]
+    data['m_iSUInstancename'] = [0, 0, 0]
+    data['m_iSUMessageType'] = 0
+    data['m_iSUMessagetextID'] = 0
+    data['m_iSUMessageSendNPC'] = 0
+    data['m_iSUDialogBubble'] = 16041 + (16*multiplier)
+    data['m_iSUDialogBubbleNPCID'] = quest_npc
+    data['m_iSUJournaliDAdd'] = 2988 + (3*multiplier)
+    data['m_iFOutgoingMission'] = 0
+    data['m_iFOutgoingTask'] = 0
+    data['m_iFItemID'] = [0, 0, 0]
+    data['m_iFItemNumNeeded'] = [0, 0, 0]
+    data['m_iFMessageType'] = 0
+    data['m_iFMessageTextID'] = 0
+    data['m_iFMessageSendNPC'] = 0
+    data['m_iFDialogBubble'] = 0
+    data['m_iFDialogBubbleNPCID'] = 0
+    data['m_iFJournalIDAdd'] = 0
+    data['m_iDelItemID'] = [0, 0, 0, 0]
+    data['m_iMentorEmailID'] = [0, 0, 0, 0, 0]
+    xdtdata['m_pMissionTable']['m_pMissionData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iHMissionType'] = 3
+    data['m_iHMissionID'] = mission_id
+    data['m_iHMissionName'] = 16038 + (16*multiplier)
+    data['m_iHTaskType'] = 5
+    data['m_iHTaskID'] = 5250 + (3*multiplier)
+    data['m_iHNPCID'] = 0
+    data['m_iHJournalNPCID'] = quest_npc
+    data['m_iHTerminatorNPCID'] = 0
+    data['m_iHDifficultyType'] = 2
+    data['m_iHBarkerTextID'] = [0, 0, 0, 0]
+    data['m_iHCurrentObjective'] = 16043 + (16*multiplier)
+    data['m_iRequireInstanceID'] = 0
+    data['m_iRepeatflag'] = 0
+    data['m_iKorStReqLvlMin'] = 0
+    data['m_iCTRReqLvMin'] = min_required_lvl
+    data['m_iCTRReqLvMax'] = 0
+    data['m_iCSTRReqNano'] = [0, 0, 0, 0, 0]
+    data['m_iCSTReqGuide'] = 0
+    data['m_iCSTReqMission'] = required_missions
+    data['m_iCSTEntranceGroupMin'] = 0
+    data['m_iCSTEntranceGroupMax'] = 0
+    data['m_iCSTItemID'] = [0, 0, 0]
+    data['m_iCSTItemNumNeeded'] = [0, 0, 0]
+    data['m_iCSTTrigger'] = 0
+    data['m_iCSUCheckTimer'] = 0
+    data['m_iCSUEnemyID'] = [enemy_id, 0, 0]
+    data['m_iCSUNumToKill'] = [0, 0, 0]
+    data['m_iCSUItemID'] = [578 + (1*multiplier), 0, 0]
+    data['m_iCSUItemNumNeeded'] = [1, 0, 0]
+    data['m_iCSUDEFNPCID'] = 0
+    data['m_iCSUDEFNPCAI'] = 0
+    data['m_iCSUDEPNPCFollow'] = 0
+    data['m_iSTGrantTimer'] = 0
+    data['m_iSTItemID'] = [578 + (1*multiplier), 0, 0]
+    data['m_iSTItemNumNeeded'] = [0, 0, 0]
+    data['m_iSTItemDropRate'] = [100, 0, 0]
+    data['m_iSTGrantWayPoint'] = 0
+    data['m_iSTSpawnMonsterID'] = 0
+    data['m_iSTSpwanLocation'] = 0
+    data['m_iSTMessageType'] = 2
+    data['m_iSTMessageTextID'] = 16044 + (16*multiplier)
+    data['m_iSTMessageSendNPC'] = quest_giver_npc
+    data['m_iSTDialogBubble'] = 0
+    data['m_iSTDialogBubbleNPCID'] = 0
+    data['m_iSTJournalIDAdd'] = 2989 + (3*multiplier)
+    data['m_pstrSTScript'] = ''
+    data['m_iSTNanoID'] = 0
+    data['m_iKorSuccRewardID'] = 0
+    data['m_iSUReward'] = 0
+    data['m_iSUOutgoingMission'] = 0
+    data['m_iSUOutgoingTask'] = 5251 + (3*multiplier)
+    data['m_iSUItem'] = [0, 0, 0]
+    data['m_iSUInstancename'] = [0, 0, 0]
+    data['m_iSUMessageType'] = 0
+    data['m_iSUMessagetextID'] = 0
+    data['m_iSUMessageSendNPC'] = 0
+    data['m_iSUDialogBubble'] = 0
+    data['m_iSUDialogBubbleNPCID'] = 0
+    data['m_iSUJournaliDAdd'] = 2989 + (3*multiplier)
+    data['m_iFOutgoingMission'] = 0
+    data['m_iFOutgoingTask'] = 0
+    data['m_iFItemID'] = [0, 0, 0]
+    data['m_iFItemNumNeeded'] = [0, 0, 0]
+    data['m_iFMessageType'] = 0
+    data['m_iFMessageTextID'] = 0
+    data['m_iFMessageSendNPC'] = 0
+    data['m_iFDialogBubble'] = 0
+    data['m_iFDialogBubbleNPCID'] = 0
+    data['m_iFJournalIDAdd'] = 0
+    data['m_iDelItemID'] = [0, 0, 0, 0]
+    data['m_iMentorEmailID'] = [0, 0, 0, 0, 0]
+    xdtdata['m_pMissionTable']['m_pMissionData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iHMissionType'] = 3
+    data['m_iHMissionID'] = mission_id
+    data['m_iHMissionName'] = 16038 + (16*multiplier)
+    data['m_iHTaskType'] = 4
+    data['m_iHTaskID'] = 5251 + (3*multiplier)
+    data['m_iHNPCID'] = 0
+    data['m_iHJournalNPCID'] = quest_giver_npc
+    data['m_iHTerminatorNPCID'] = quest_giver_npc
+    data['m_iHDifficultyType'] = 2
+    data['m_iHBarkerTextID'] = [0, 0, 0, 0]
+    data['m_iHCurrentObjective'] = 16046 + (16*multiplier)
+    data['m_iRequireInstanceID'] = 0
+    data['m_iRepeatflag'] = 0
+    data['m_iKorStReqLvlMin'] = 0
+    data['m_iCTRReqLvMin'] = min_required_lvl
+    data['m_iCTRReqLvMax'] = 0
+    data['m_iCSTRReqNano'] = [0, 0, 0, 0, 0]
+    data['m_iCSTReqGuide'] = 0
+    data['m_iCSTReqMission'] = required_missions
+    data['m_iCSTEntranceGroupMin'] = 0
+    data['m_iCSTEntranceGroupMax'] = 0
+    data['m_iCSTItemID'] = [0, 0, 0]
+    data['m_iCSTItemNumNeeded'] = [0, 0, 0]
+    data['m_iCSTTrigger'] = 0
+    data['m_iCSUCheckTimer'] = 0
+    data['m_iCSUEnemyID'] = [0, 0, 0]
+    data['m_iCSUNumToKill'] = [0, 0, 0]
+    data['m_iCSUItemID'] = [578 + (1*multiplier), 0, 0]
+    data['m_iCSUItemNumNeeded'] = [1, 0, 0]
+    data['m_iCSUDEFNPCID'] = 0
+    data['m_iCSUDEFNPCAI'] = 0
+    data['m_iCSUDEPNPCFollow'] = 0
+    data['m_iSTGrantTimer'] = 0
+    data['m_iSTItemID'] = [578 + (1*multiplier), 0, 0]
+    data['m_iSTItemNumNeeded'] = [1, 0, 0]
+    data['m_iSTItemDropRate'] = [0, 0, 0]
+    data['m_iSTGrantWayPoint'] = quest_giver_npc
+    data['m_iSTSpawnMonsterID'] = 0
+    data['m_iSTSpwanLocation'] = 0
+    data['m_iSTMessageType'] = 2
+    data['m_iSTMessageTextID'] = 16047 + (16*multiplier)
+    data['m_iSTMessageSendNPC'] = quest_npc
+    data['m_iSTDialogBubble'] = 0
+    data['m_iSTDialogBubbleNPCID'] = 0
+    data['m_iSTJournalIDAdd'] = 2990 + (3*multiplier)
+    data['m_pstrSTScript'] = ''
+    data['m_iSTNanoID'] = 0
+    data['m_iKorSuccRewardID'] = 0
+    data['m_iSUReward'] = 722 + (1*multiplier)
+    data['m_iSUOutgoingMission'] = 0
+    data['m_iSUOutgoingTask'] = 0
+    data['m_iSUItem'] = [578 + (1*multiplier), 0, 0]
+    data['m_iSUInstancename'] = [-1, 0, 0]
+    data['m_iSUMessageType'] = 0
+    data['m_iSUMessagetextID'] = 0
+    data['m_iSUMessageSendNPC'] = 0
+    data['m_iSUDialogBubble'] = 16048 + (16*multiplier)
+    data['m_iSUDialogBubbleNPCID'] = quest_giver_npc
+    data['m_iSUJournaliDAdd'] = 2990 + (3*multiplier)
+    data['m_iFOutgoingMission'] = 0
+    data['m_iFOutgoingTask'] = 0
+    data['m_iFItemID'] = [0, 0, 0]
+    data['m_iFItemNumNeeded'] = [0, 0, 0]
+    data['m_iFMessageType'] = 0
+    data['m_iFMessageTextID'] = 0
+    data['m_iFMessageSendNPC'] = 0
+    data['m_iFDialogBubble'] = 0
+    data['m_iFDialogBubbleNPCID'] = 0
+    data['m_iFJournalIDAdd'] = 0
+    data['m_iDelItemID'] = [0, 0, 0, 0]
+    data['m_iMentorEmailID'] = [0, 0, 0, 0, 0]
+    xdtdata['m_pMissionTable']['m_pMissionData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iMissionSummary'] = 16037 + (16*multiplier)
+    data['m_iDetaileMissionDesc'] = 16034 + (16*multiplier)
+    data['m_iMissionCompleteSummary'] = 16035 + (16*multiplier)
+    data['m_iDetaileMissionCompleteSummary'] = 16036 + (16*multiplier)
+    data['m_iTaskSummary'] = 0
+    data['m_iDetailedTaskDesc'] = 16042 + (16*multiplier)
+    xdtdata['m_pMissionTable']['m_pJournalData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iMissionSummary'] = 16037 + (16*multiplier)
+    data['m_iDetaileMissionDesc'] = 16034 + (16*multiplier)
+    data['m_iMissionCompleteSummary'] = 16035 + (16*multiplier)
+    data['m_iDetaileMissionCompleteSummary'] = 16036 + (16*multiplier)
+    data['m_iTaskSummary'] = 0
+    data['m_iDetailedTaskDesc'] = 16045 + (16*multiplier)
+    xdtdata['m_pMissionTable']['m_pJournalData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iMissionSummary'] = 16037 + (16*multiplier)
+    data['m_iDetaileMissionDesc'] = 16034 + (16*multiplier)
+    data['m_iMissionCompleteSummary'] = 16035 + (16*multiplier)
+    data['m_iDetaileMissionCompleteSummary'] = 16036 + (16*multiplier)
+    data['m_iTaskSummary'] = 0
+    data['m_iDetailedTaskDesc'] = 16049 + (16*multiplier)
+    xdtdata['m_pMissionTable']['m_pJournalData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iMissionRewardID'] = 722 + (1*multiplier)
+    data['m_iMissionRewarItemType'] = reward_item_type
+    data['m_iMissionRewardItemID'] = reward_item_id
+    data['m_iBox1Choice'] = 0
+    data['m_iMissionRewardItemType2'] = [0, 0, 0, 0]
+    data['m_iMissionRewardItemID2'] = [0, 0, 0, 0]
+    data['m_iBox2Choice'] = 0
+    data['m_iCash'] = 10000
+    data['m_iFusionMatter'] = 10000
+    xdtdata['m_pMissionTable']['m_pRewardData'].append(data)
+
+    for _ in range(1,17):
+        mission_string = input(clr(f"  > MissionString [{_}]: " + green))
+        data = FFOrderedDict()
+        data['m_pstrNameString'] = mission_string
+        xdtdata['m_pMissionTable']['m_pMissionStringData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_iItemNumber'] = 578 + (1*multiplier)
+    data['m_iItemName'] = 578 + (1*multiplier)
+    data['m_iComment'] = 0
+    data['m_iQuestStart'] = 0
+    data['m_iDelete'] = 0
+    data['m_iIcon'] = 2
+    xdtdata['m_pQuestItemTable']['m_pItemData'].append(data)
+
+    data = FFOrderedDict()
+    data['m_strName'] = quest_item
+    data['m_strComment'] = quest_item
+    data['m_strComment1'] = ""
+    data['m_strComment2'] = ""
+    data['m_iExtraNumber'] = 0
+    xdtdata['m_pQuestItemTable']['m_pItemStringData'].append(data)
 
 def add_npc():
     
@@ -357,14 +679,14 @@ def main():
             print(clr(logger(f"  > xdtdata = tabledata.objects[{key}].contents")))
             break
         except: print(clr(logger(f"  - Invalid Key: {key}"),2))
-    print(clr("\n  - Pre-defined commands: print-bundle, print-content, dump-xdt, path_id('filename'), fix-bundles, add-npc, help, log, save, save-all, clear, exit\n"))
+    print(clr("\n  - Pre-defined commands: print-bundle, print-content, dump-xdt, path_id('filename'), fix-bundles, add-mission, add-npc, help, log, save, save-all, clear, exit\n"))
     
     help_msg = """  - Available Shortcuts With Examples:\n
- - aimport sound.wav, 22.5, sound  -  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
- - aswap sound.wav, 22.5, sound  -  import_audio(xdtdata,'sound.wav',22.5,'sound')
+ - audio-import sound.wav, 22.5, sound  -  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
+ - audio-swap sound.wav, 22.5, sound  -  import_audio(xdtdata,'sound.wav',22.5,'sound')
  - export example.obj  -  open('example.obj','w').write(OBJMesh(xdtdata).export())
  - imesh npc_alienx.obj npc_alienx  -  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
- - key 0  -  xdtdata = tabledata.objects[0].contents
+ - key 0  -  xdtdata = tabledata.objects[0].contents 
  - ms-info  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
  - ms-npc 1 2671  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
  - ms-npc 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
@@ -384,25 +706,26 @@ def main():
  - rename Cone02, DT_MTDB_ETC05  -  xdtdata.name = xdtdata.name.replace('Cone02','DT_MTDB_ETC05')
  - texture 344  -  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
  - texture 344 fusion_cheese  -  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
- - timport texture 1  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
- - timport texture 5  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
- - timport-mass 1  -  mass import_texture (fmt='dxt1')
- - timport-mass 5  -  mass import_texture (fmt='dxt5')
- - tswap texture.png texture 1  -  import_texture(xdtdata,'texture.png','texture','dxt1')
- - tswap texture.png texture 5  -  import_texture(xdtdata,'texture.png','texture','dxt5')
- - tswap-mass 1  -  mass import_texture (fmt='dxt1')
- - tswap-mass 5  -  mass import_texture (fmt='dxt5')"""
+ - texture-import texture 1  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - texture-import texture 5  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
+ - texture-import-mass 1  -  mass import_texture (fmt='dxt1')
+ - texture-import-mass 5  -  mass import_texture (fmt='dxt5')
+ - texture-swap texture.png texture 1  -  import_texture(xdtdata,'texture.png','texture','dxt1')
+ - texture-swap texture.png texture 5  -  import_texture(xdtdata,'texture.png','texture','dxt5')
+ - texture-swap-mass 1  -  mass import_texture (fmt='dxt1')
+ - texture-swap-mass 5  -  mass import_texture (fmt='dxt5')"""
 
     while True:
         try:
             cmd = logger(input(f"  {red}> {green}"))
             print(reset, end='')
-            cmd_lower = cmd.lower()
+            cmd_lower = cmd.lower().strip()
 
             if cmd_lower == "help": print(clr(help_msg))
             elif cmd_lower == "clear": cls()
             elif cmd_lower == "exit": break
             elif cmd_lower == "fix-bundles": fix_bundles()
+            elif cmd_lower == "add-mission": add_mission()
             elif cmd_lower == "add-npc": add_npc()
             elif cmd_lower == "print-bundle": print_bundle()
             elif cmd_lower == "print-content": print_content()
@@ -427,14 +750,14 @@ def main():
                 try: tabledata.save(open(cab_name,'wb'))
                 except: print(clr(err(sys.exc_info()), 2)) 
 
-            elif cmd_lower.startswith('aimport '):
-                cmd = cmd.replace('aimport ','').split(', ')
+            elif cmd_lower.startswith('audio-import '):
+                cmd = cmd.replace('audio-import ','').split(', ')
                 new_audio = tabledata.add_object(83)
                 import_audio(new_audio.contents,cmd[0],int(cmd[1]),cmd[2])
                 tabledata.add2ab(f"sound/{cmd[0]}",new_audio.path_id)
 
-            elif cmd_lower.startswith('aswap '):
-                cmd = cmd.replace('aswap ','').split(', ')
+            elif cmd_lower.startswith('audio-swap '):
+                cmd = cmd.replace('audio-swap ','').split(', ')
                 import_audio(xdtdata, cmd[0], int(cmd[1]), cmd[2])
 
             elif cmd_lower.startswith('export '):
@@ -502,23 +825,23 @@ def main():
                 to_exec = "xdtdata['m_pNpcTable']['m_pNpcMeshData'][key]['m_pstrMTextureString']"
                 shortcut(2, cmd, to_exec)
 
-            elif cmd_lower.startswith('timport '):
-                cmd = cmd.replace('timport ','').split(' ')
+            elif cmd_lower.startswith('texture-import '):
+                cmd = cmd.replace('texture-import ','').split(' ')
                 new_texture = tabledata.add_object(28)
                 import_texture(new_texture._contents, f'{cmd[0]}.png', cmd[0], f'dxt{cmd[1]}')
                 tabledata.add2ab(f"texture/{cmd[0]}.dds", new_texture.path_id)
 
-            elif cmd_lower.startswith('timport-mass '):
-                cmd = cmd.replace('timport-mass ','').replace(' ','')
-                timport_mass(cmd)
+            elif cmd_lower.startswith('texture-import-mass '):
+                cmd = cmd.replace('texture-import-mass ','').replace(' ','')
+                texture_import_mass(cmd)
 
-            elif cmd_lower.startswith('tswap '):
-                cmd = cmd.replace('tswap ','').split(' ')
+            elif cmd_lower.startswith('texture-swap '):
+                cmd = cmd.replace('texture-swap ','').split(' ')
                 import_texture(xdtdata, cmd[0], cmd[1], f'dxt{cmd[2]}')
 
-            elif cmd_lower.startswith('tswap-mass '):
-                cmd = cmd.replace('tswap-mass ','').replace(' ','')
-                tswap_mass(cmd)
+            elif cmd_lower.startswith('texture-swap-mass '):
+                cmd = cmd.replace('texture-swap-mass ','').replace(' ','')
+                texture_swap_mass(cmd)
 
             else:
                 exec(cmd)
@@ -534,23 +857,17 @@ def menu():
     
     while True:
         
-        banner(); print(clr(f"\n  1 - CAB Explorer / Editor\n  2 - Fix Bundles\n  3 - Mission Builder (coming soon)\n  4 - Change workspace [{os.path.basename(os.getcwd())}]\n  5 - Visit {green}nuclearff.{green}com{white}\n  6 - Exit\n"))
+        banner(); print(clr(f"\n  1 - CAB Explorer / Editor\n  2 - Fix Bundles\n  3 - Change workspace [{os.path.basename(os.getcwd())}]\n  4 - Visit {green}nuclearff.{green}com{white}\n  5 - Exit\n"))
         
         choice = input(clr("  > Choice: ") + green)
         if choice == "1": main()
         elif choice == "2": banner(); fix_bundles()
-        #elif choice == "3": banner(); mission_builder()
-        elif choice == "4": open_workspace()
-        elif choice == "5": os.system(f'start https://nuclearff.com/')
-        elif choice == "6": break
+        elif choice == "3": open_workspace()
+        elif choice == "4": os.system('start https://nuclearff.com/')
+        elif choice == "5": break
         else: rm_line()
 
 if __name__ == '__main__':
 
     log = ''
-    
-    if magickwand_installed:
-        menu()
-    else:
-        print(clr("\n  - Please install ImageMagick and then run the script!\n",2))
-        input(clr("  > Press [ENTER] to exit..."))
+    menu()
