@@ -21,28 +21,29 @@ def change_dir():
     os.chdir("dank.fusion-fall")
 
 def setup():
-    
+
     global magickwand_installed
 
     try: from wand.image import Image; magickwand_installed = True
     except ImportError:
-        
+
         magickwand_installed = False
 
         cls(); print(clr("\n  - MagickWand shared library not found!",2))
-        
+
         if input(clr("\n  > Download ImageMagick? [y/n]: ") + red).lower() == "y":
-    
+
             while True:
                 try:
 
                     file_name = "ImageMagick-7.1.0-37-Q16-HDRI-x64-dll.exe"
                     print(clr(f"\n  - Downloading [ {file_name} ]..."))
-                    response = requests.get(f"https://github.com/SirDank/dank.fusion-fall/raw/main/__assets__/{file_name}", headers={'user-agent':'dank.fusion-fall'}, allow_redirects=True)
+                    response = requests.get(f"https://github.com/SirDank/dank.fusion-fall/raw/main/__assets__/{file_name}", headers={'user-agent':'dank.fusion-fall'}, allow_redirects=True, timeout=120)
                     data = response.content
                     try: size = '{:.3}'.format(int(response.headers['Content-Length'])/1024000)
                     except: size = "?"
-                    open(file_name,"wb").write(data)
+                    with open(file_name,"wb") as file:
+                        file.write(data)
                     print(clr(f"\n  - Downloaded [ {file_name} ] [ {size} MB ]"))
                     break
 
@@ -57,9 +58,9 @@ change_dir()
 setup()
 
 if magickwand_installed:
-    
-    # there is a reason this is being written like this!
-    try: from wand.image import Image; from unitypackff.asset import Asset; from unitypackff.export import OBJMesh; from unitypackff.object import FFOrderedDict, ObjectPointer; from unitypackff.modding import import_texture, import_mesh, import_audio
+
+    # there is a reason this is being written like this! (keep single line)
+    try: from wand.image import Image; from unitypack.asset import Asset; from unitypack.export import OBJMesh; from unitypack.object import FFOrderedDict, ObjectPointer; from unitypack.modding import import_texture, import_mesh, import_audio
     except:
         print(clr("\n  - Failed to import required packages! Exiting...",2))
         time.sleep(3)
@@ -70,7 +71,7 @@ else:
     sys.exit(0)
 
 def banner():
-    
+
     banner = '\n\n ____  _____ _____ _____   _____ _____    ___ \n|    \\|  _  |   | |  |  | |   __|   __|  |_  |\n|  |  |     | | | |    -|_|   __|   __|  |  _|\n|____/|__|__|_|___|__|__|_|__|  |__|     |___|\n\nx\n\n'
     x = Style.BRIGHT + clr(f"by sir.dank | {green}nuclearff.{green}com")
     cls(); print(align(clr(banner,4,colours=[white, white_normal, red, red_normal, red_dim]).replace('x',x)))
@@ -78,11 +79,11 @@ def banner():
 def open_workspace():
 
     banner()
-    
+
     folders = [_ for _ in os.listdir() if os.path.isdir(_)]
 
     if len(folders) == 0:
-        
+
         print(clr("\n  - No workspaces found!\n",2))
         while True:
             try:
@@ -93,13 +94,13 @@ def open_workspace():
             except:
                 rm_line()
                 print(clr(f"  - Failed to make directory: {workspace}",2))       
-    
+
     else:
-        
+
         print(clr("\n  - Workspaces:\n\n    0 - Create New Workspace"))
         for i, workspace in enumerate(folders):
             print(clr(f"    {i+1} > {workspace}"))
-        
+
         print()
         while True:
             _ = input(clr("  > Select workspace [num/name]: ") + red)
@@ -111,16 +112,15 @@ def open_workspace():
                             workspace = input(clr("  > New workspace name: ") + red)
                             if not os.path.isdir(workspace):
                                 os.mkdir(workspace); break
-                            else:
-                                rm_line()
+                            rm_line()
                         except:
                             rm_line()
-                            print(clr(f"  - Failed to make directory: {workspace}",2))   
+                            print(clr(f"  - Failed to make directory: {workspace}",2))
                     break
                 else: workspace = folders[int(_)-1]; break
             elif _ in folders: workspace = _; break
             else: rm_line()
-            
+
         os.chdir(workspace)
         workspace = os.getcwd()
         if "y" in input(clr("\n  > Open workspace in explorer? [y/n]: ") + red).lower():
@@ -149,11 +149,11 @@ def dump_xdt():
             for dname, data in table.items():
                 output[tname][dname] = data
         except: output[tname] = "<err>"
-    
+
     if "CustomAssetBundle-TableData" in cab_name: file_name = "xdt1013.json"
     else: file_name = "xdt.json"
 
-    json.dump(output, open(file_name, "w+"), indent=4)
+    json.dump(output, open(file_name, "w+", encoding="utf-8"), indent=4)
 
 def fix_bundles():
 
@@ -179,11 +179,11 @@ def texture_swap_mass(dxt_mode):
     for texture in textures:
         try: import_texture(xdtdata, f"texture_swap/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
         except: print(clr(err(sys.exc_info()), 2))
-        
+
     print(clr(f"\n  - Mass swapped [{len(textures)}] textures!\n"))
 
 def texture_import_mass(dxt_mode):
-    
+
     try: os.mkdir("texture_import"); input(clr("  > Created texture_import folder! Hit [ENTER] after adding files... "))
     except: pass
 
@@ -194,7 +194,7 @@ def texture_import_mass(dxt_mode):
             import_texture(new_texture._contents, f"texture_import/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
             tabledata.add2ab(f"texture/{texture}.dds", new_texture.path_id)
         except: print(clr(err(sys.exc_info()), 2))
-        
+
     print(clr(f"\n  - Mass imported [{len(textures)}] textures!\n"))
 
 def shortcut(mode, cmd, to_exec):
@@ -530,15 +530,15 @@ def add_mission():
     xdtdata['m_pQuestItemTable']['m_pItemStringData'].append(data)
 
 def add_npc():
-    
+
     tmp = str(xdtdata['m_pNpcTable']['m_pNpcData'][-1])
-    
+
     if "m_iNpcNumber" not in tmp:
         print(clr('\n  - Could not find "m_iNpcNumber" in str(xdtdata["m_pNpcTable"]["m_pNpcData"][-1])',2))
         return
-    
+
     new_npc_num = int(tmp.split("'m_iNpcNumber', ")[1].split(')')[0]) + 1
-    
+
     data = FFOrderedDict()
     print(clr(f"  > data['m_iNpcNumber'] = {new_npc_num}"))
     data['m_iNpcNumber'] = new_npc_num
@@ -546,11 +546,11 @@ def add_npc():
     data['m_iNpcName'] = new_npc_num
     print(clr(f"  > data['m_iComment'] = {new_npc_num}"))
     data['m_iComment'] = new_npc_num
-    
+
     new_mesh_num = int(tmp.split("'m_iMesh', ")[1].split(')')[0]) + 1
     print(clr(f"  > data['m_iMesh'] = {new_mesh_num}"))
     data['m_iMesh'] = new_mesh_num
-    
+
     counter = -1
     while True:
         last_barker_num = int(str(xdtdata['m_pNpcTable']['m_pNpcData'][counter]).split("'m_iBarkerNumber', ")[1].split(')')[0])
@@ -559,12 +559,12 @@ def add_npc():
 
     print(clr(f"  > data['m_iBarkerNumber'] = {last_barker_num + 1}"))
     data['m_iBarkerNumber'] = last_barker_num + 1
-    
+
     for key in ['m_iDifficulty', 'm_iTeam', 'm_iNpcLevel', 'm_iNpcType', 'm_iHNpc', 'm_iHNpcNum', 'm_iNpcStyle', 'm_iAiType', 'm_iHP', 'm_iHPRegen', 'm_iDropType', 'm_iRegenTime', 'm_iHeight', 'm_iRadius', 'm_fScale', 'm_iPower', 'm_iAccuracy', 'm_iProtection', 'm_iDodge', 'm_iRunSpeed', 'm_iSwimSpeed', 'm_iJumpHeight', 'm_iJumpDistance', 'm_iSightRange', 'm_iIdleRange', 'm_iCombatRange', 'm_iAtkRange', 'm_iAtkAngle', 'm_iAtkRate', 'm_iEffectArea', 'm_iTargetMode', 'm_iTargetNumber', 'm_iInitalTime', 'm_iDeliverTime', 'm_iDelayTime', 'm_iDurationTime', 'm_iMegaType', 'm_iMegaTypeProb', 'm_iCorruptionType', 'm_iCorruptionTypeProb', 'm_iActiveSkill1', 'm_iActiveSkill1Prob', 'm_iActiveSkill2', 'm_iActiveSkill2Prob', 'm_iActiveSkill3', 'm_iActiveSkill3Prob', 'm_iSupportSkill', 'm_iPassiveBuff', 'm_iNeck', 'm_iTexture', 'm_iTexture2', 'm_iIcon1', 'm_iEffect', 'm_iSound', 'm_iWalkSpeed', 'm_iMapIcon', 'm_iLegStyle', 'm_iBarkerType', 'm_iMegaAni', 'm_iActiveSkill1Ani', 'm_iActiveSkill2Ani', 'm_iSupportSkillAni', 'm_iMegaString', 'm_iCorruptionString', 'm_iActiveSkill1String', 'm_iActiveSkill2String', 'm_iSupportSkillString', 'm_iServiceNumber']:
         while True:
             try: data[key] = int(input(clr(f"  > data['{key}'] (int) = ") + green)); break
             except: pass
-            
+
     for key in ['m_fAnimationSpeed', 'm_fWalkAnimationSpeed', 'm_fRunAnimationSpeed']:
         while True:
             try: data[key] = float(input(clr(f"  > data['{key}'] (float) = ") + green)); break
@@ -580,7 +580,7 @@ def add_npc():
     #        except: pass
     #print(clr("  > xdtdata['m_pNpcTable']['m_pNpcIconData'].append(data)"))
     #xdtdata['m_pNpcTable']['m_pNpcIconData'].append(data)
-    
+
     data = FFOrderedDict()
     for key in ['m_pstrMMeshModelString', 'm_pstrMTextureString', 'm_pstrMTextureString2', 'm_pstrFTextureString', 'm_pstrFTextureString2', 'm_pstrFMeshModelString']:
         while True:
@@ -595,50 +595,50 @@ def add_npc():
             try: data[key] = input(clr(f"  > data['{key}'] (string) = ") + green); break
             except: pass
     while True:
-        try: data['m_iExtraNumber'] = int(input(clr(f"  > data['m_iExtraNumber'] (int) = ") + green)); break
+        try: data['m_iExtraNumber'] = int(input(clr("  > data['m_iExtraNumber'] (int) = ") + green)); break
         except: pass
     print(clr("  > xdtdata['m_pNpcTable']['m_pNpcBarkerData'].append(data)"))
     xdtdata['m_pNpcTable']['m_pNpcBarkerData'].append(data)
-    
+
     data = FFOrderedDict()
     for key in ['m_strName', 'm_strComment', 'm_strComment1', 'm_strComment2']:
         while True:
             try: data[key] = input(clr(f"  > data['{key}'] (string) = ") + green); break
             except: pass
     while True:
-        try: data['m_iExtraNumber'] = int(input(clr(f"  > data['m_iExtraNumber'] (int) = ") + green)); break
+        try: data['m_iExtraNumber'] = int(input(clr("  > data['m_iExtraNumber'] (int) = ") + green)); break
         except: pass
     print(clr("  > xdtdata['m_pNpcTable']['m_pNpcStringData'].append(data)"))
     xdtdata['m_pNpcTable']['m_pNpcStringData'].append(data)
 
 def print_bundle():
-    
+
     container = tabledata.objects[1].read()['m_Container']
     print(clr(logger('asset\t\tindex\tsize\tpath')))
     for path, mtdt in container:
         print(clr(logger('{}\t{}\t{}\t{}'.format(mtdt['asset'].path_id, mtdt['preloadIndex'], mtdt['preloadSize'], path))))
 
 def print_content():
-    
+
     print(clr(logger('id\t\ttype_id\ttype\t\tname')))
     for id, obj in tabledata.objects.items():
         name = ''
         if hasattr(obj.read(), 'name'):
             name = obj.read().name
         try: print(clr(logger('{}\t{}\t{}\t{}'.format(id, obj.type_id, obj.type, name))))
-        except Exception as exc: print(clr('ERROR: ' + str(exc))) 
+        except Exception as exc: print(clr('ERROR: ' + str(exc)))
 
 # main
 
 def main():
-    
+
     global tabledata, xdtdata, cab_name
-    
+
     while True:
 
         banner()
         print(clr("  - Select Custom Asset Bundle..."))
-        
+
         cab_path = ''
         while not cab_path:
             if "PYTHONHOME" in os.environ:
@@ -646,13 +646,13 @@ def main():
             else: #cab_path = input(clr("  > Drag and Drop Custom Asset Bundle: ")).replace('/','\\').replace('"','')
                 cab_path = file_selector("Select Custom Asset Bundle").replace('/','\\').replace('"','')
         rm_line()
-        
+
         print(clr(logger(f'  > cab_path = "{cab_path}"')))
         cab_name = str(cab_path.split('\\')[-1])
         print(clr(logger(f"  > tabledata = Asset.from_file(open('{cab_path}', 'rb'))")))
         try:
             tabledata = Asset.from_file(open(cab_path, 'rb'))
-            tabledata_keys = [str(_) for _ in tabledata.objects.keys()]
+            tabledata_keys = [str(_) for _ in tabledata.objects]
             break
         except:
             print(clr(err(sys.exc_info()), 2))
@@ -672,7 +672,7 @@ def main():
         print(clr("  - Suggested Key: 1375"))
 
     while True:    
-        key = input(clr(f'  > TableData Key: ') + green)
+        key = input(clr('  > TableData Key: ') + green)
         try:
             key = int(key)
             xdtdata = tabledata.objects[key].contents
@@ -680,7 +680,7 @@ def main():
             break
         except: print(clr(logger(f"  - Invalid Key: {key}"),2))
     print(clr("\n  - Pre-defined commands: print-bundle, print-content, dump-xdt, path_id('filename'), fix-bundles, add-mission, add-npc, help, log, save, save-all, clear, exit\n"))
-    
+
     help_msg = """  - Available Shortcuts With Examples:\n
  - audio-import sound.wav, 22.5, sound  -  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
  - audio-swap sound.wav, 22.5, sound  -  import_audio(xdtdata,'sound.wav',22.5,'sound')
@@ -729,12 +729,15 @@ def main():
             elif cmd_lower == "add-npc": add_npc()
             elif cmd_lower == "print-bundle": print_bundle()
             elif cmd_lower == "print-content": print_content()
-            elif cmd_lower == "log": open("log.txt","w+").write(log)
-            
+
+            elif cmd_lower == "log":
+                with open("log.txt", "w+", encoding="utf-8") as file:
+                    file.write(log)
+
             elif cmd_lower == "dump-xdt": 
                 try: dump_xdt()
                 except: print(clr(err(sys.exc_info()), 2))
-            
+
             elif cmd_lower == "save":
                 try: os.remove(cab_name)
                 except: pass
@@ -744,7 +747,8 @@ def main():
             elif cmd_lower == "save-all":
                 try: dump_xdt()
                 except: print(clr(err(sys.exc_info()), 2)); continue
-                open("log.txt","w+").write(log)
+                with open("log.txt","w+",encoding="utf-8") as file:
+                    file.write(log)
                 try: os.remove(cab_name)
                 except: pass
                 try: tabledata.save(open(cab_name,'wb'))
@@ -762,12 +766,13 @@ def main():
 
             elif cmd_lower.startswith('export '):
                 cmd = cmd.replace('export ','').replace(' ','')
-                open(cmd,'w').write(OBJMesh(xdtdata).export())
+                with open(cmd,'w',encoding="utf-8") as file:
+                    file.write(OBJMesh(xdtdata).export())
 
             elif cmd_lower.startswith('imesh '):
                 cmd = cmd.replace('imesh ','').split(' ')
                 import_mesh(xdtdata, cmd[0], cmd[1])
-                
+
             elif cmd_lower.startswith('key '):
                 key = int(cmd.replace('key ',''))
                 xdtdata = tabledata.objects[key].contents
@@ -814,7 +819,7 @@ def main():
                 cmd = cmd.replace('objects ','').split(' ')
                 to_exec = f"for _ in range({cmd[0]},{cmd[1]}): print(f'{{_}} - {{tabledata.objects[_].contents}}')"
                 exec(to_exec); print()
-            
+
             elif cmd_lower.startswith('rename '):
                 cmd = cmd.replace('rename ','').split(', ')
                 to_exec = f"xdtdata.name = xdtdata.name.replace('{cmd[0]}','{cmd[1]}')"
@@ -845,20 +850,20 @@ def main():
 
             else:
                 exec(cmd)
-            
+
             print()
 
         except: print(clr(err(sys.exc_info()) + '\n', 2))
 
 def menu():
-    
+
     sys.setrecursionlimit(10000)
     open_workspace()
-    
+
     while True:
-        
+
         banner(); print(clr(f"\n  1 - CAB Explorer / Editor\n  2 - Fix Bundles\n  3 - Change workspace [{os.path.basename(os.getcwd())}]\n  4 - Visit {green}nuclearff.{green}com{white}\n  5 - Exit\n"))
-        
+
         choice = input(clr("  > Choice: ") + green)
         if choice == "1": main()
         elif choice == "2": banner(); fix_bundles()
