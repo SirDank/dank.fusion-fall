@@ -14,8 +14,8 @@ title("𝚍𝚊𝚗𝚔.𝚏𝚞𝚜𝚒𝚘𝚗-𝚏𝚊𝚕𝚕")
 def change_dir():
 
     os.chdir(os.path.dirname(__file__))
-    if os.path.basename(os.getcwd()) == "dank.fusion-fall.dist":
-        os.chdir("..")
+    # if os.path.basename(os.getcwd()) == "dank.fusion-fall.dist":
+    #     os.chdir("..")
     if not os.path.isdir("dank.fusion-fall"):
         os.mkdir("dank.fusion-fall")
     os.chdir("dank.fusion-fall")
@@ -73,13 +73,13 @@ else:
 def banner():
 
     banner = '\n\n ____  _____ _____ _____   _____ _____    ___ \n|    \\|  _  |   | |  |  | |   __|   __|  |_  |\n|  |  |     | | | |    -|_|   __|   __|  |  _|\n|____/|__|__|_|___|__|__|_|__|  |__|     |___|\n\nx\n\n'
-    x = Style.BRIGHT + clr(f"by sir.dank | {green}nuclearff.{green}com")
+    x = Style.BRIGHT + clr(f"by sir.dank | {green}fusionfall.{green}org")
     cls(); print(align(clr(banner,4,colours=[white, white_normal, red, red_normal, red_dim]).replace('x',x)))
 
 def open_workspace():
 
     banner()
-
+    change_dir()
     folders = [_ for _ in os.listdir() if os.path.isdir(_)]
 
     if len(folders) == 0:
@@ -862,13 +862,13 @@ def menu():
 
     while True:
 
-        banner(); print(clr(f"\n  1 - CAB Explorer / Editor\n  2 - Fix Bundles\n  3 - Change workspace [{os.path.basename(os.getcwd())}]\n  4 - Visit {green}nuclearff.{green}com{white}\n  5 - Exit\n"))
+        banner(); print(clr(f"\n  1 - CAB Explorer / Editor\n  2 - Fix Bundles\n  3 - Change workspace [{os.path.basename(os.getcwd())}]\n  4 - Visit {green}fusionfall.{green}org{white}\n  5 - Exit\n"))
 
         choice = input(clr("  > Choice: ") + green)
         if choice == "1": main()
         elif choice == "2": banner(); fix_bundles()
         elif choice == "3": open_workspace()
-        elif choice == "4": os.system('start https://nuclearff.com/')
+        elif choice == "4": os.system('start https://fusionfall.org/')
         elif choice == "5": break
         else: rm_line()
 
