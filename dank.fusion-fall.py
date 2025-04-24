@@ -5,6 +5,7 @@ import time
 import shutil
 import requests
 import pretty_errors
+from io import StringIO
 from pprint import pprint
 from dankware.tkinter import file_selector
 from dankware import align, clr, cls, err, rm_line, title
@@ -94,7 +95,7 @@ def open_workspace():
                 break
             except:
                 rm_line()
-                print(clr(f"  - Failed to make directory: {workspace}",2))       
+                print(clr(f"  - Failed to make directory: {workspace}",2))
 
     else:
 
@@ -203,7 +204,7 @@ def shortcut(mode, cmd, to_exec):
     if mode == 1:
         if "=" not in cmd: exec(f"print({to_exec})".replace('key', cmd))
         else: cmd = cmd.split(' = '); exec(to_exec.replace('key',cmd[0]) + f" = \"{cmd[1]}\"")
-    elif mode == 2: 
+    elif mode == 2:
         if len(cmd) == 1: exec(f"print({to_exec})".replace('key', cmd[0]))
         else: exec(to_exec.replace('key',cmd[0]) + f" = \"{cmd[1]}\"")
     print()
@@ -612,26 +613,111 @@ def add_npc():
     print(clr("  > xdtdata['m_pNpcTable']['m_pNpcStringData'].append(data)"))
     xdtdata['m_pNpcTable']['m_pNpcStringData'].append(data)
 
-def print_bundle():
+def print_data():
+    """
+    Combined function that prints comprehensive information about the asset bundle.
+    Combines data from print_bundle, print_content, and print_dict functions.
+    """
+    # Get bundle container data
+    bundle_data = {}
+    if 1 in tabledata.objects and tabledata.objects[1].type == 'AssetBundle':
+        container = tabledata.objects[1].read()['m_Container']
+        for path, mtdt in container:
+            asset_id = mtdt['asset'].path_id
+            bundle_data[asset_id] = {
+                'path': path,
+                'preloadIndex': mtdt['preloadIndex'],
+                'preloadSize': mtdt['preloadSize']
+            }
 
-    container = tabledata.objects[1].read()['m_Container']
-    print(clr(logger('asset\tindex\tsize\tpath')))
-    for path, mtdt in container:
-        print(clr(logger('{}\t{}\t{}\t{}'.format(mtdt['asset'].path_id, mtdt['preloadIndex'], mtdt['preloadSize'], path))))
-
-def print_content():
-
-    print(clr(logger('id\ttype_id\ttype\t\tname')))
+    # Get content data
+    content_data = {}
     for id, obj in tabledata.objects.items():
         name = ''
         if hasattr(obj.read(), 'name'):
             name = obj.read().name
-        try: print(clr(logger('{}\t{}\t{}\t\t{}'.format(id, obj.type_id, obj.type, name))))
-        except Exception as exc: print(clr('ERROR: ' + str(exc)))
 
-def print_dict():
+        content_data[id] = {
+            'type_id': obj.type_id,
+            'type': str(obj.type),
+            'name': name
+        }
 
-    pprint(tabledata.objects[key].read()._obj, compact=True)
+    # Print combined data
+    print(clr(logger("\n=== ASSET BUNDLE DATA ===\n")))
+    print(clr(logger("ID\tType\t\tName\t\tPath\t\tPreloadIndex\tPreloadSize\tProperties")))
+    print(clr(logger("-" * 100)))
+
+    for id, content in content_data.items():
+        # Basic info
+        type_str = content['type']
+        name = content['name']
+
+        # Bundle info if available
+        path = bundle_data.get(id, {}).get('path', '')
+        preload_index = bundle_data.get(id, {}).get('preloadIndex', '')
+        preload_size = bundle_data.get(id, {}).get('preloadSize', '')
+
+        # Get additional properties if this is the selected object
+        properties = ""
+        if id == key:
+            try:
+                obj_data = tabledata.objects[id].read()._obj
+                if isinstance(obj_data, dict) or hasattr(obj_data, 'items'):
+                    # Get first few properties for display
+                    prop_count = 0
+                    for k, v in obj_data.items():
+                        if prop_count < 3:  # Limit to 3 properties to avoid clutter
+                            if isinstance(v, (str, int, float, bool)):
+                                properties += f"{k}={v}, "
+                            else:
+                                properties += f"{k}=[...], "
+                            prop_count += 1
+                    if prop_count > 0:
+                        properties = properties[:-2]  # Remove trailing comma and space
+            except Exception as e:
+                properties = f"Error: {str(e)}"
+
+        # Format the output line
+        line = f"{id}\t{type_str[:15]}"
+        if len(type_str) < 8:
+            line += "\t"
+        line += f"\t{name[:15]}"
+        if len(name) < 8:
+            line += "\t"
+        line += f"\t{path[:15]}"
+        if len(path) < 8:
+            line += "\t"
+        line += f"\t{preload_index}\t\t{preload_size}\t\t{properties}"
+
+        print(clr(logger(line)))
+
+    # If a specific key is selected, show more detailed information
+    if key in tabledata.objects:
+        print(clr(logger("\n=== DETAILED OBJECT DATA ===\n")))
+        try:
+            obj = tabledata.objects[key].read()
+            print(clr(logger(f"Object ID: {key}")))
+            print(clr(logger(f"Type: {tabledata.objects[key].type}")))
+            if hasattr(obj, 'name'):
+                print(clr(logger(f"Name: {obj.name}")))
+
+            # Show object structure
+            print(clr(logger("\nObject Structure:")))
+            obj_data = obj._obj if hasattr(obj, '_obj') else obj
+
+            # Use pprint with a string buffer to capture the output
+            buffer = StringIO()
+            pprint(obj_data, stream=buffer, compact=True)
+            structure = buffer.getvalue()
+
+            # Log and print the structure
+            for line in structure.split('\n'):
+                print(clr(logger(line)))
+
+        except Exception as exc:
+            print(clr(f"Error displaying detailed data: {str(exc)}",2))
+            print(clr(err((type(exc), exc, exc.__traceback__), 'mini'), 2))
 
 # main
 
@@ -684,7 +770,7 @@ def main():
         print(clr("  - Suggested Key: 1375"))
     del all_keys_found, tabledata_keys
 
-    while True:    
+    while True:
         key = input(clr('  > TableData Key: ') + green)
         try:
             key = int(key)
@@ -692,7 +778,7 @@ def main():
             print(clr(logger(f"  > xdtdata = tabledata.objects[{key}].contents")))
             break
         except: print(clr(logger(f"  - Invalid Key: {key}"),2))
-    pre_defined_cmds = "\n  - Pre-defined commands: print-bundle, print-content, print-dict, dump-xdt, path_id('filename'), fix-bundles, add-mission, add-npc, help, log, save, save-all, clear, exit\n"
+    pre_defined_cmds = "\n  - Pre-defined commands: print-data, dump-xdt, path_id('filename'), fix-bundles, add-mission, add-npc, help, log, save, save-all, clear, exit\n"
     print(clr(pre_defined_cmds))
 
     help_msg = """\n  - Available Shortcuts With Examples:
@@ -700,7 +786,7 @@ def main():
   - audio-swap sound.wav, 22.5, sound  -  import_audio(xdtdata,'sound.wav',22.5,'sound')
   - export example.obj  -  open('example.obj','w').write(OBJMesh(xdtdata).export())
   - imesh npc_alienx.obj npc_alienx  -  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
-  - key 0  -  xdtdata = tabledata.objects[0].contents 
+  - key 0  -  xdtdata = tabledata.objects[0].contents
   - ms-info  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
   - ms-npc 1 2671  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
   - ms-npc 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
@@ -741,15 +827,13 @@ def main():
             elif cmd_lower == "fix-bundles": fix_bundles()
             elif cmd_lower == "add-mission": add_mission()
             elif cmd_lower == "add-npc": add_npc()
-            elif cmd_lower == "print-bundle": print_bundle()
-            elif cmd_lower == "print-content": print_content()
-            elif cmd_lower == "print-dict": print_dict()
+            elif cmd_lower == "print-data": print_data()
 
             elif cmd_lower == "log":
                 with open("log.txt", "w+", encoding="utf-8") as file:
                     file.write(log)
 
-            elif cmd_lower == "dump-xdt": 
+            elif cmd_lower == "dump-xdt":
                 try: dump_xdt()
                 except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
 
