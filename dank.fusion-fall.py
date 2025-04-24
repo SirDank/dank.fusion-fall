@@ -5,6 +5,7 @@ import time
 import shutil
 import requests
 import pretty_errors
+from pprint import pprint
 from dankware.tkinter import file_selector
 from dankware import align, clr, cls, err, rm_line, title
 from dankware import white, white_normal, red, red_normal, red_dim, green, reset, Style
@@ -178,7 +179,7 @@ def texture_swap_mass(dxt_mode):
     textures = os.listdir("texture_swap")
     for texture in textures:
         try: import_texture(xdtdata, f"texture_swap/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
-        except: print(clr(err(sys.exc_info()), 2))
+        except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
 
     print(clr(f"\n  - Mass swapped [{len(textures)}] textures!\n"))
 
@@ -189,11 +190,11 @@ def texture_import_mass(dxt_mode):
 
     textures = os.listdir("texture_import")
     for texture in textures:
-        try: 
+        try:
             new_texture = tabledata.add_object(28)
             import_texture(new_texture._contents, f"texture_import/{texture}", texture.split('.')[0], f'dxt{dxt_mode}')
             tabledata.add2ab(f"texture/{texture}.dds", new_texture.path_id)
-        except: print(clr(err(sys.exc_info()), 2))
+        except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
 
     print(clr(f"\n  - Mass imported [{len(textures)}] textures!\n"))
 
@@ -614,25 +615,29 @@ def add_npc():
 def print_bundle():
 
     container = tabledata.objects[1].read()['m_Container']
-    print(clr(logger('asset\t\tindex\tsize\tpath')))
+    print(clr(logger('asset\tindex\tsize\tpath')))
     for path, mtdt in container:
         print(clr(logger('{}\t{}\t{}\t{}'.format(mtdt['asset'].path_id, mtdt['preloadIndex'], mtdt['preloadSize'], path))))
 
 def print_content():
 
-    print(clr(logger('id\t\ttype_id\ttype\t\tname')))
+    print(clr(logger('id\ttype_id\ttype\t\tname')))
     for id, obj in tabledata.objects.items():
         name = ''
         if hasattr(obj.read(), 'name'):
             name = obj.read().name
-        try: print(clr(logger('{}\t{}\t{}\t{}'.format(id, obj.type_id, obj.type, name))))
+        try: print(clr(logger('{}\t{}\t{}\t\t{}'.format(id, obj.type_id, obj.type, name))))
         except Exception as exc: print(clr('ERROR: ' + str(exc)))
+
+def print_dict():
+
+    pprint(tabledata.objects[key].read()._obj, compact=True)
 
 # main
 
 def main():
 
-    global tabledata, xdtdata, cab_name
+    global tabledata, xdtdata, cab_name, key
 
     while True:
 
@@ -642,9 +647,9 @@ def main():
         cab_path = ''
         while not cab_path:
             if "PYTHONHOME" in os.environ:
-                cab_path = file_selector("Select Custom Asset Bundle", os.path.join(os.path.dirname(__file__), "dankware.ico")).replace('/','\\').replace('"','')
+                cab_path = file_selector("Select Custom Asset Bundle", os.path.join(os.path.dirname(__file__), "dankware.ico"), os.getcwd()).replace('/','\\').replace('"','')
             else: #cab_path = input(clr("  > Drag and Drop Custom Asset Bundle: ")).replace('/','\\').replace('"','')
-                cab_path = file_selector("Select Custom Asset Bundle").replace('/','\\').replace('"','')
+                cab_path = file_selector("Select Custom Asset Bundle", path=os.getcwd()).replace('/','\\').replace('"','')
         rm_line()
 
         print(clr(logger(f'  > cab_path = "{cab_path}"')))
@@ -654,13 +659,20 @@ def main():
             tabledata = Asset.from_file(open(cab_path, 'rb'))
             tabledata_keys = [str(_) for _ in tabledata.objects]
             break
-        except:
-            print(clr(err(sys.exc_info()), 2))
+        except Exception as exc:
+            print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
             print(clr("  - Sleeping 10s..."))
             time.sleep(10)
 
-    if input(clr(f"\n  > Print {len(tabledata.objects)} Available TableData Keys? [y/n]: ") + green).lower() == 'y':
-        print(clr(logger("  - Available TableData Keys: \n\n" + '\n'.join(tabledata_keys) + "\n")))
+    all_keys_found = True
+    for _ in range(int(tabledata_keys[0]), int(tabledata_keys[-1])+1):
+        if str(_) not in tabledata_keys:
+            all_keys_found = False
+            break
+    if all_keys_found:
+        print(clr(logger(f"  - Available TableData Keys: {tabledata_keys[0]}-{tabledata_keys[-1]}\n")))
+    # else:
+    #     print(clr(logger(f"  - Available TableData Keys: {', '.join(tabledata_keys)}\n")))
 
     if "CustomAssetBundle-1dca92eecee4742d985b799d8226666d" in cab_name and "7" in tabledata_keys:
         print(clr("  - Suggested Key: 7"))
@@ -670,6 +682,7 @@ def main():
         print(clr("  - Suggested Key: 3"))
     elif "sharedassets0.assets" in cab_name and "1375" in tabledata_keys:
         print(clr("  - Suggested Key: 1375"))
+    del all_keys_found, tabledata_keys
 
     while True:    
         key = input(clr('  > TableData Key: ') + green)
@@ -679,41 +692,42 @@ def main():
             print(clr(logger(f"  > xdtdata = tabledata.objects[{key}].contents")))
             break
         except: print(clr(logger(f"  - Invalid Key: {key}"),2))
-    print(clr("\n  - Pre-defined commands: print-bundle, print-content, dump-xdt, path_id('filename'), fix-bundles, add-mission, add-npc, help, log, save, save-all, clear, exit\n"))
+    pre_defined_cmds = "\n  - Pre-defined commands: print-bundle, print-content, print-dict, dump-xdt, path_id('filename'), fix-bundles, add-mission, add-npc, help, log, save, save-all, clear, exit\n"
+    print(clr(pre_defined_cmds))
 
-    help_msg = """  - Available Shortcuts With Examples:\n
- - audio-import sound.wav, 22.5, sound  -  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
- - audio-swap sound.wav, 22.5, sound  -  import_audio(xdtdata,'sound.wav',22.5,'sound')
- - export example.obj  -  open('example.obj','w').write(OBJMesh(xdtdata).export())
- - imesh npc_alienx.obj npc_alienx  -  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
- - key 0  -  xdtdata = tabledata.objects[0].contents 
- - ms-info  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
- - ms-npc 1 2671  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
- - ms-npc 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
- - ms-string 11666 = dee dee's herb garden  -  xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"
- - ms-string 11666  -  print(xdtdata['m_pMissionTable']['m_pMissionStringData'][11666])
- - ms-task 1 2  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'] = 2
- - ms-task 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'])
- - ms-tasknext 1 2  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'] = 2
- - ms-tasknext 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'])
- - mesh 344  -  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'])
- - mesh 344 fusion_cheese  -  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'] = \"fusion_cheese\"
- - meshid 2675 2671  -  xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'] = 2671
- - meshid 2677  -  print(xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'])
- - npc-name 3148 = test name  -  xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'] = \"test name\"
- - npc-name 3148  -  print(xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'])
- - objects 1 1000  -  for _ in range(1,1000): print(f'{_} - {tabledata.objects[_].contents}')
- - rename Cone02, DT_MTDB_ETC05  -  xdtdata.name = xdtdata.name.replace('Cone02','DT_MTDB_ETC05')
- - texture 344  -  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
- - texture 344 fusion_cheese  -  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
- - texture-import texture 1  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
- - texture-import texture 5  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
- - texture-import-mass 1  -  mass import_texture (fmt='dxt1')
- - texture-import-mass 5  -  mass import_texture (fmt='dxt5')
- - texture-swap texture.png texture 1  -  import_texture(xdtdata,'texture.png','texture','dxt1')
- - texture-swap texture.png texture 5  -  import_texture(xdtdata,'texture.png','texture','dxt5')
- - texture-swap-mass 1  -  mass import_texture (fmt='dxt1')
- - texture-swap-mass 5  -  mass import_texture (fmt='dxt5')"""
+    help_msg = """\n  - Available Shortcuts With Examples:
+  - audio-import sound.wav, 22.5, sound  -  new_audio = tabledata.add_object(83); import_audio(new_audio.contents,'sound.wav',22.5,'sound'); tabledata.add2ab('sound.wav',new_audio.path_id)
+  - audio-swap sound.wav, 22.5, sound  -  import_audio(xdtdata,'sound.wav',22.5,'sound')
+  - export example.obj  -  open('example.obj','w').write(OBJMesh(xdtdata).export())
+  - imesh npc_alienx.obj npc_alienx  -  import_mesh(xdtdata, 'npc_alienx.obj', 'npc_alienx')
+  - key 0  -  xdtdata = tabledata.objects[0].contents 
+  - ms-info  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1])
+  - ms-npc 1 2671  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'] = NPC_INDEX#
+  - ms-npc 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHNPCID'])
+  - ms-string 11666 = dee dee's herb garden  -  xdtdata['m_pMissionTable']['m_pMissionStringData'][11666] = \"dee dee's herb garden\"
+  - ms-string 11666  -  print(xdtdata['m_pMissionTable']['m_pMissionStringData'][11666])
+  - ms-task 1 2  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'] = 2
+  - ms-task 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iHTaskID'])
+  - ms-tasknext 1 2  -  xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'] = 2
+  - ms-tasknext 1  -  print(xdtdata['m_pMissionTable']['m_pMissionData'][1]['m_iSUOutgoingTask'])
+  - mesh 344  -  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'])
+  - mesh 344 fusion_cheese  -  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMMeshModelString'] = \"fusion_cheese\"
+  - meshid 2675 2671  -  xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'] = 2671
+  - meshid 2677  -  print(xdtdata['m_pNpcTable']['m_pNpcData'][2675]['m_iMesh'])
+  - npc-name 3148 = test name  -  xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'] = \"test name\"
+  - npc-name 3148  -  print(xdtdata['m_pNpcTable']['m_pNpcStringData'][3148]['m_strName'])
+  - objects 1 1000  -  for _ in range(1,1000): print(f'{_} - {tabledata.objects[_].contents}')
+  - rename Cone02, DT_MTDB_ETC05  -  xdtdata.name = xdtdata.name.replace('Cone02','DT_MTDB_ETC05')
+  - texture 344  -  print(xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'])
+  - texture 344 fusion_cheese  -  xdtdata['m_pNpcTable']['m_pNpcMeshData'][344]['m_pstrMTextureString'] = \"fusion_cheese\"
+  - texture-import texture 1  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt1'); tabledata.add2ab('texture.png',new_texture.path_id)
+  - texture-import texture 5  -  new_texture = tabledata.add_object(28); import_texture(new_texture._contents,'texture.png','texture','dxt5'); tabledata.add2ab('texture.png',new_texture.path_id)
+  - texture-import-mass 1  -  mass import_texture (fmt='dxt1')
+  - texture-import-mass 5  -  mass import_texture (fmt='dxt5')
+  - texture-swap texture.png texture 1  -  import_texture(xdtdata,'texture.png','texture','dxt1')
+  - texture-swap texture.png texture 5  -  import_texture(xdtdata,'texture.png','texture','dxt5')
+  - texture-swap-mass 1  -  mass import_texture (fmt='dxt1')
+  - texture-swap-mass 5  -  mass import_texture (fmt='dxt5')"""
 
     while True:
         try:
@@ -721,7 +735,7 @@ def main():
             print(reset, end='')
             cmd_lower = cmd.lower().strip()
 
-            if cmd_lower == "help": print(clr(help_msg))
+            if cmd_lower == "help": print(clr(help_msg + pre_defined_cmds))
             elif cmd_lower == "clear": cls()
             elif cmd_lower == "exit": break
             elif cmd_lower == "fix-bundles": fix_bundles()
@@ -729,6 +743,7 @@ def main():
             elif cmd_lower == "add-npc": add_npc()
             elif cmd_lower == "print-bundle": print_bundle()
             elif cmd_lower == "print-content": print_content()
+            elif cmd_lower == "print-dict": print_dict()
 
             elif cmd_lower == "log":
                 with open("log.txt", "w+", encoding="utf-8") as file:
@@ -736,23 +751,23 @@ def main():
 
             elif cmd_lower == "dump-xdt": 
                 try: dump_xdt()
-                except: print(clr(err(sys.exc_info()), 2))
+                except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
 
             elif cmd_lower == "save":
                 try: os.remove(cab_name)
                 except: pass
                 try: tabledata.save(open(cab_name,'wb'))
-                except: print(clr(err(sys.exc_info()), 2))
+                except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
 
             elif cmd_lower == "save-all":
                 try: dump_xdt()
-                except: print(clr(err(sys.exc_info()), 2)); continue
+                except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2)); continue
                 with open("log.txt","w+",encoding="utf-8") as file:
                     file.write(log)
                 try: os.remove(cab_name)
                 except: pass
                 try: tabledata.save(open(cab_name,'wb'))
-                except: print(clr(err(sys.exc_info()), 2)) 
+                except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini'),2))
 
             elif cmd_lower.startswith('audio-import '):
                 cmd = cmd.replace('audio-import ','').split(', ')
@@ -853,7 +868,7 @@ def main():
 
             print()
 
-        except: print(clr(err(sys.exc_info()) + '\n', 2))
+        except Exception as exc: print(clr(err((type(exc), exc, exc.__traceback__),'mini') + '\n',2))
 
 def menu():
 
